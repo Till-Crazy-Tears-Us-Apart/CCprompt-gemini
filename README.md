@@ -1,6 +1,6 @@
 # Claude Code Engineering Suite (CCES)
 
-这是一个为 [Claude Code](https://code.claude.com) + [Claude Code Router](https://github.com/musistudio/claude-code-router) + [Gemini 3 系列 api](https://aistudio.google.com) 的氛围编程框架设计提示词工程系统，通过更严格的约束、模块化的技能定义和自动化的上下文注入，抑制 Gemini 3 api 的幻觉问题，并将 Claude Code 转变为一个**纪律严明、基于证据、遵循专业开发流程**的 python 开发者。
+这是一个为 [Claude Code](https://code.claude.com) + [Claude Code Router](https://github.com/musistudio/claude-code-router) 的氛围编程框架设计提示词工程系统，通过更严格的约束、模块化的技能定义和自动化的上下文注入，抑制模型的幻觉问题，并将 Claude Code 转变为一个**纪律严明、基于证据、遵循专业开发流程**的 python 开发者。
 
 ## 🚀 核心特性
 
