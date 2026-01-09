@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 C:/Users/29860/.claude/hooks/tabu_reminder.py"
+          }
+        ]
+      }
+    ]
+  },
+  "outputStyle": "engineer-professional",
+  "spinnerTipsEnabled": true
+}

@@ -1,0 +1,19 @@
+# Secrets & Local Config
+settings.json
+*.env
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Logs
+*.log
+
+# Editor Directories
+.idea/
+.vscode/
