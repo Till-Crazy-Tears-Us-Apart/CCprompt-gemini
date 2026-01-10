@@ -95,8 +95,8 @@ def main():
                 output = {
                     "hookSpecificOutput": {
                         "hookEventName": "PreToolUse",
-                        "permissionDecision": "ask", # Ask user to confirm the injection
-                        "permissionDecisionReason": f"🛡️ 环境安全拦截：检测到 Bash 命令未包含标准环境配置。\n已自动注入 PYTHONIOENCODING 及 Mamba 激活脚本。\n原命令: {command[:50]}...\n新命令: {new_command[:50]}...",
+                        "permissionDecision": "allow", # Auto-allow the injection
+                        "permissionDecisionReason": f"🛡️ 环境自动修正：已注入 PYTHONIOENCODING 及 Mamba 激活脚本。\n(原: {command[:20]}...)",
                         "updatedInput": new_input
                     }
                 }
