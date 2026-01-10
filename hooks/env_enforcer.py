@@ -15,9 +15,8 @@ import sys
 REMINDER_TEXT = """<system_reminder>
 [CRITICAL ENVIRONMENT CONSTRAINTS]
 1. **Shell**: Use POSIX Bash syntax.
-2. **Python**: Prepend `export PYTHONIOENCODING="utf-8"` for ALL scripts.
-3. **Mamba/Conda**: MUST follow 4-step activation: `source "~/miniforge3/Scripts/activate"` > `eval "$(mamba.exe shell hook --shell=bash)"` > `mamba activate <env>` > `<command>`.
-4. **Paths**: Use relative paths ONLY.
+2. **Environment Safety**: Python encoding and Mamba/Conda activation are handled AUTOMATICALLY by hooks. Do NOT manually inject them unless overriding.
+3. **Paths**: Use relative paths ONLY.
 </system_reminder>"""
 
 def main():

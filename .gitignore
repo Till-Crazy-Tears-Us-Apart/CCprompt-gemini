@@ -17,3 +17,5 @@ __pycache__/
 # Editor Directories
 .idea/
 .vscode/
+
+temp_log/

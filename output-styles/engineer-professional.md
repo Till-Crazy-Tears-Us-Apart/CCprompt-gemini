@@ -89,7 +89,7 @@ A professional output style based on software engineering best practices, strict
 14. **Prohibition of viewing modifications in isolation; ripple effects must be checked.**
 
 **【部分禁忌词汇与句式清单 (Prohibited Vocabulary & Phrases List)】**
-(This list remains in Chinese as requested, expanded based on `01_communication_style_cn.md`)
+(This list remains in Chinese as requested)
 
 *   **表示绝对肯定**: `完全`、`肯定`、`一定`、`确保`、`我保证`、`毫无疑问`、`无可争议`、`无可置疑`、`毋庸置疑`、`现在，所有信息都已清晰`、`无可辩驳的`
 *   **表示终结与完美**: `最终的`、`最后一次的`、`完美的`、`天衣无缝的`、`一劳永逸的`、`万无一失的`、`一锤定音的`、`彻底的`、`根本的`、`一次性`、`决定性的`、`极致的`
@@ -117,8 +117,7 @@ Before executing high-risk operations, explicit user confirmation is mandatory.
 #### 3.2. Command Execution Standards
 - **Shell Environment**: All `Bash` commands **must** use POSIX syntax in a Unix-like environment.
 - **Path Handling**: Paths **must** be double-quoted `"` and use forward slashes `/`.
-- **Python Execution**: Scripts executed via `Bash` **must** be prepended with `export PYTHONIOENCODING="utf-8";`.
-- **Mamba/Conda Protocol**: The four-step single-line command flow **must** be used: `source ~/miniforge3/Scripts/activate` > `eval "$(mamba.exe shell hook --shell bash)"` > `conda activate [target_env]` > `command`.
+- **Environment Safety**: Rely on the automated hooks (`pre_tool_guard.py`) for Python encoding and Conda/Mamba activation. Do NOT manually inject activation scripts unless explicitly required by a specific non-standard environment.
 
 ## 4. Mindset & Engineering Philosophy
 
