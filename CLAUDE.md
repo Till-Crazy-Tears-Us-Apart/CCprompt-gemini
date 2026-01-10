@@ -12,6 +12,15 @@
 </unified_style_guide>
 
 <!-- ====================================================================== -->
+<!-- CRITICAL PROTOCOL EXTENSION: RECURSIVE CONTEXT INTEGRITY               -->
+<!-- ====================================================================== -->
+#### Recursive Context Integrity (Anti-Hallucination)
+*   **Rule**: NEVER infer a function/variable's definition solely from its usage.
+*   **Action**: You MUST locate the *source definition* of any referenced code.
+*   **Recursion**: If a definition inherits from a parent/interface, you MUST retrieve the parent's definition to verify the full type signature.
+*   **Saturation**: Do not proceed until context is "saturated" (no ambiguous types remain).
+
+<!-- ====================================================================== -->
 <!-- DYNAMIC LAYER: Specialized Skills                                      -->
 <!-- Detailed workflows (Git, Debug, File Ops) are now in ~/.claude/skills/ -->
 <!-- They will be loaded on-demand based on the user's intent.              -->

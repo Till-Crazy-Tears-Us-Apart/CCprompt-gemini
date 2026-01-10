@@ -18,7 +18,24 @@ description: Use this skill for any file system operations, including reading, w
 2.  **Verify**: Use read-only tools (`Glob`, `Read`) to verify preconditions (file existence, current content) *before* any side-effect operation.
 3.  **Execute**: Execute the operation only after verification.
 
-### 1.3 Execution Protocol (Type 1)
+### 1.3 Recursive Context Retrieval Protocol (Auggie-Inspired)
+**Trigger**: When analyzing code dependencies or fixing bugs.
+
+1.  **Semantic Query Construction**:
+    *   Do NOT just grep for exact matches.
+    *   Use NL to formulate 3-point queries: *Where* (location), *What* (definition), *How* (usage).
+
+2.  **Definition-Chain Verification**:
+    *   Found `funcA()` call? -> Find `funcA` definition.
+    *   `funcA` uses `InterfaceB`? -> Find `InterfaceB` definition.
+    *   `InterfaceB` extends `BaseC`? -> Find `BaseC` definition.
+    *   *Stop Condition*: When you hold the **Full Type Signature** of all interacting components.
+
+3.  **Completeness Check**:
+    *   If context is partial, explicitly list missing parts using `TodoWrite`.
+    *   If ambiguous, use `AskUserQuestion` to align boundaries.
+
+### 1.4 Execution Protocol (Type 1)
 *   **Silence**: Execute tools silently. Do not chat between tool calls unless necessary.
 *   **Serial**: Call tools one by one.
 *   **Parameter Integrity**: STRICTLY check `file_path` and `old_string`/`new_string` before calling.
