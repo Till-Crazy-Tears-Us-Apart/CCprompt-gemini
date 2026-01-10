@@ -42,18 +42,20 @@
 
 ### 1. 部署文件
 将本项目内容复制到 Claude Code 全局配置目录：
-*   Windows: `%USERPROFILE%\.claude\`
-*   macOS/Linux: `~/.claude/`
+*   **macOS/Linux**: `~/.claude/`
+*   **Windows**: `%USERPROFILE%\.claude\` (通常是 `C:\Users\<YourName>\.claude\`)
 
 ### 2. 应用配置
-本项目提供 `settings.example.json` 作为配置参考。请将其中的 `hooks` 部分合并至您的 `settings.json` 中。
+1.  将 `settings.example.json` 重命名为 `config.json`（或合并到现有的 `config.json` 中）。
+2.  **Windows 用户特别注意**：
+    *   `settings.example.json` 默认使用了 Unix 风格的路径 (`~/.claude/hooks/...`)。
+    *   **Windows `cmd.exe` 不支持 `~` 符号**。您**必须**手动将所有 `~` 替换为您实际的绝对路径。
+    *   *示例*: 将 `~/.claude/hooks/pre_tool_guard.py` 修改为 `C:/Users/YourName/.claude/hooks/pre_tool_guard.py` (推荐使用正斜杠 `/`)。
+3.  **验证**: 重启 Claude Code，确保没有报错。
 
-**注意**:
-*   配置中使用了 `"$CLAUDE_PROJECT_DIR"` 环境变量，无需修改为绝对路径。
-*   默认使用 `python` 命令执行脚本。请确保系统 PATH 中 `python` 指向 Python 3.x。
-
-### 3. 环境适配 (可选)
-如果您的项目需要特定的环境初始化（如 source 特定的 setup 脚本），请在项目根目录下创建 `.env_setup.sh` 文件。`pre_tool_guard.py` 会优先加载该文件。否则，系统将尝试自动探测 `mamba` 或 `conda`。
+### 3. 环境要求
+*   请确保系统 PATH 中 `python` 指向 Python 3.x。
+*   如果您的项目需要特定的环境初始化（如 source 特定的 setup 脚本），请在项目根目录下创建 `.env_setup.sh` 文件。`pre_tool_guard.py` 会优先加载该文件。否则，系统将尝试自动探测 `mamba` 或 `conda`。
 
 ## 使用说明
 
@@ -66,7 +68,10 @@
 *   **命名规范**: 系统会自动检测 kebab-case 文件名，并在确认文件存在性后尝试自动纠正为 snake_case。
 
 ## 协议声明
+
 本配置强制 AI 遵守以下工程原则：
-*   **PVE 工作流**: 计划 (Plan) -> 验证 (Verify) -> 执行 (Execute)。
+*   **交互协议 (P-A-E-R)**:
+    *   **修改操作**: 遵循 Plan -> Ask -> Execute (Silent) -> Report 闭环。
+    *   **只读操作**: 实行 **Direct Act**，立即执行无需请示。
 *   **调试纪律**: 遵循 Insert -> Observe -> Fix -> Verify 闭环。
-*   **沟通风格**: 客观、无形容词、证据导向。
+*   **沟通风格**: 客观、无形容词、证据导向；严禁过渡性废话与预告。

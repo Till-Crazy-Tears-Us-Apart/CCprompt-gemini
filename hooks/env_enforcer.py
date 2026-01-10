@@ -17,12 +17,21 @@ REMINDER_TEXT = """<system_reminder>
 1. **Shell**: Use POSIX Bash syntax.
 2. **Environment Safety**: Python encoding and Mamba/Conda activation are handled AUTOMATICALLY by hooks. Do NOT manually inject them unless overriding.
 3. **Paths**: Use relative paths ONLY.
+4. **Behavior**: SILENT EXECUTION. No text between tool calls.
+5. **Workflow**: Read-only -> Direct Act. Modification -> Plan & MUST use AskUserQuestion -> Silent Act.
+6. **Protocol**: PROTOCOL COMMITMENT header MUST ONLY appear at the start of a SUBSTANTIVE text response.
 </system_reminder>"""
 
 def main():
     """
     Prints the reminder text to stdout, which will be injected into the context.
     """
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Python < 3.7 or safe fallback
+        pass
+
     sys.stdout.buffer.write(REMINDER_TEXT.encode('utf-8'))
     sys.exit(0)
 

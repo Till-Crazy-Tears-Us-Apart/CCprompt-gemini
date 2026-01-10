@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "export PYTHONIOENCODING=\"utf-8\"; python \"$CLAUDE_PROJECT_DIR/hooks/pre_tool_guard.py\""
+            "command": "python \"~/.claude/hooks/pre_tool_guard.py\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "export PYTHONIOENCODING=\"utf-8\"; python \"$CLAUDE_PROJECT_DIR/hooks/env_enforcer.py\""
+            "command": "python \"~/.claude/hooks/env_enforcer.py\""
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "export PYTHONIOENCODING=\"utf-8\"; python \"$CLAUDE_PROJECT_DIR/hooks/context_manager.py\""
+            "command": "python \"~/.claude/hooks/context_manager.py\""
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "export PYTHONIOENCODING=\"utf-8\"; python \"$CLAUDE_PROJECT_DIR/hooks/context_manager.py\""
+            "command": "python \"~/.claude/hooks/context_manager.py\""
           }
         ]
       }

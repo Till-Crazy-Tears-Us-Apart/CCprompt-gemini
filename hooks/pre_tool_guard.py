@@ -73,6 +73,7 @@ def inject_bash_env(original_command):
     return f"{clean_preamble} {original_command}"
 
 def main():
+    sys.stdout.reconfigure(encoding='utf-8')
     try:
         # 1. Read Input
         input_data = json.load(sys.stdin)
