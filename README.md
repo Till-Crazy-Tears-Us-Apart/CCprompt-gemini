@@ -46,7 +46,7 @@
 *   **Windows**: `%USERPROFILE%\.claude\` (通常是 `C:\Users\<YourName>\.claude\`)
 
 ### 2. 应用配置
-1.  将 `settings.example.json` 重命名为 `config.json`（或合并到现有的 `config.json` 中）。
+1.  将 `settings.example.json` 的内容合并到您的 `settings.json` 文件中（位于配置目录下）。
 2.  **Windows 用户特别注意**：
     *   `settings.example.json` 默认使用了 Unix 风格的路径 (`~/.claude/hooks/...`)。
     *   **Windows `cmd.exe` 不支持 `~` 符号**。您**必须**手动将所有 `~` 替换为您实际的绝对路径。
