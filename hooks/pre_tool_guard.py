@@ -74,10 +74,17 @@ def inject_bash_env(original_command):
     # Clean up the preamble to be a single line or minimal block
     clean_preamble = BASH_PREAMBLE.strip().replace('\n', ' ')
 
-    # Conditional Injection of PYTHONIOENCODING
+    # Conditional Injection
     env_vars = ""
     if is_python_related(original_command):
+        # Case A: Python tools -> Force UTF-8 via env var
         env_vars = 'export PYTHONIOENCODING="utf-8"; '
+    else:
+        # Case B: Native Windows commands (ping, ipconfig) -> Force Console Code Page 65001 (UTF-8)
+        # We check platform to be safe, though this script is primarily for your Windows environment.
+        if platform.system() == "Windows":
+            # Use chcp.com explicitly as 'chcp' might not be found in Git Bash PATH
+            env_vars = 'chcp.com 65001 >/dev/null 2>&1 && '
 
     # Combine: Env Vars + Preamble + Original Command
     return f"{env_vars}{clean_preamble} {original_command}"
