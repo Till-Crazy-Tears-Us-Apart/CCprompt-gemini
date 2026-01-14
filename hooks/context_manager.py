@@ -16,60 +16,125 @@ import subprocess
 from datetime import datetime
 
 SNAPSHOT_FILE = ".compact_args.md"
+MAX_STATUS_LINES = 50  # Limit git status output to avoid memory issues
+
+def get_git_env():
+    """Returns environment with UTF-8 encoding forced for Git."""
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    return env
 
 def generate_snapshot(cwd):
     """
     Generates the snapshot file using git status and file listings.
-    Replicates the logic of the original /prepare-compact command.
+    Optimized for Windows performance and large repo safety.
     """
     try:
         # 1. Capture Git Info
-        # Branch
         branch = "Unknown"
         last_commit = "Unknown"
-        git_check = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=cwd, capture_output=True)
+        status_output = ""
+
+        # Check if inside git tree
+        git_check = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            cwd=cwd,
+            capture_output=True,
+            env=get_git_env()
+        )
 
         if git_check.returncode == 0:
+            # OPTIMIZATION: Combine branch info with status if possible, but --show-current is cleaner.
+            # We keep them separate but ensure robust encoding.
+
             # Get Branch
-            res_branch = subprocess.run(["git", "branch", "--show-current"], cwd=cwd, capture_output=True, encoding='utf-8', errors='replace')
+            res_branch = subprocess.run(
+                ["git", "branch", "--show-current"],
+                cwd=cwd,
+                capture_output=True,
+                encoding='utf-8',
+                errors='replace',
+                env=get_git_env()
+            )
             if res_branch.returncode == 0:
                 branch = res_branch.stdout.strip()
 
             # Get Last Commit
-            res_commit = subprocess.run(["git", "log", "-1", "--pretty=format:%h - %s (%an)"], cwd=cwd, capture_output=True, encoding='utf-8', errors='replace')
+            res_commit = subprocess.run(
+                ["git", "log", "-1", "--pretty=format:%h - %s (%an)"],
+                cwd=cwd,
+                capture_output=True,
+                encoding='utf-8',
+                errors='replace',
+                env=get_git_env()
+            )
             if res_commit.returncode == 0:
                 last_commit = res_commit.stdout.strip()
 
-            # Get Status
-            status_output = subprocess.run(["git", "status", "--short"], cwd=cwd, capture_output=True, encoding='utf-8', errors='replace').stdout
-            if not status_output.strip():
-                status_output = "(工作区干净，无未提交变更)"
+            # Get Status (Optimized for Memory)
+            # Use Popen to stream output instead of loading all into memory
+            try:
+                proc = subprocess.Popen(
+                    ["git", "status", "--short"],
+                    cwd=cwd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    encoding='utf-8',
+                    errors='replace',
+                    env=get_git_env()
+                )
+
+                lines = []
+                for i, line in enumerate(proc.stdout):
+                    if i < MAX_STATUS_LINES:
+                        lines.append(line.rstrip())
+                    else:
+                        lines.append(f"... (Truncated: too many changes, showing first {MAX_STATUS_LINES})")
+                        proc.terminate() # efficient stop
+                        break
+
+                # Ensure process is cleaned up if we didn't iterate all
+                if proc.poll() is None:
+                    proc.stdout.close()
+                    proc.stderr.close()
+                    proc.wait()
+
+                status_output = "\n".join(lines)
+                if not status_output.strip():
+                    status_output = "(工作区干净，无未提交变更)"
+            except Exception as e:
+                status_output = f"Error reading git status: {e}"
+
         else:
             status_output = "--- 非 Git 仓库 ---\n"
-            # Fallback listing
+            # Fallback listing using os.scandir (Optimized)
             try:
                 file_list = []
-                for root, dirs, files in os.walk(cwd):
-                    # Skip .git and hidden dirs
-                    dirs[:] = [d for d in dirs if not d.startswith('.')]
+                # Only scan top-level depth=2 for efficiency
+                for entry in os.scandir(cwd):
+                    if entry.is_dir() and not entry.name.startswith('.'):
+                        try:
+                            # Level 2 scan
+                            for sub in os.scandir(entry.path):
+                                if not sub.name.startswith('.'):
+                                    rel_path = os.path.relpath(sub.path, cwd)
+                                    file_list.append(rel_path)
+                                    if len(file_list) >= MAX_STATUS_LINES: break
+                        except PermissionError:
+                            pass
+                    elif entry.is_file() and not entry.name.startswith('.'):
+                        file_list.append(entry.name)
 
-                    depth = root[len(cwd):].count(os.sep)
-                    if depth < 2:
-                        for f in files:
-                            if not f.startswith('.'):
-                                rel_path = os.path.relpath(os.path.join(root, f), cwd)
-                                file_list.append(rel_path)
-                status_output += "\n".join(file_list[:30])
-                if len(file_list) > 30:
+                    if len(file_list) >= MAX_STATUS_LINES: break
+
+                status_output += "\n".join(file_list)
+                if len(file_list) >= MAX_STATUS_LINES:
                     status_output += "\n... (文件过多已截断)"
             except Exception as e:
                 status_output += f"Error listing files: {e}"
 
         # 2. Generate Content
-        # Dynamic Reading List Generation
         reading_list = []
-
-        # Priority Docs
         priority_files = ["CLAUDE.md", "README.md", "CONTRIBUTING.md", "requirements.txt", "pyproject.toml", "package.json"]
         for f in priority_files:
             if os.path.exists(os.path.join(cwd, f)):
@@ -85,7 +150,6 @@ def generate_snapshot(cwd):
                    and d not in ignore_dirs]
 
             if dirs:
-                # Simple Heuristic: Sort 'src', 'lib', 'core' to front
                 dirs.sort(key=lambda x: (0 if x in ['src', 'lib', 'core', 'app', 'skills', 'hooks'] else 1, x))
                 dir_str = ", ".join([f"`{d}/`" for d in dirs[:15]])
                 reading_list.append(f"- **目录结构**: {dir_str}")
@@ -138,7 +202,6 @@ def inject_context(cwd):
             with open(snapshot_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Return structured JSON for SessionStart
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
@@ -147,23 +210,25 @@ def inject_context(cwd):
             }
             print(json.dumps(output))
         except Exception as e:
-            # If read fails, just print error to stderr
             print(f"Error reading snapshot: {e}", file=sys.stderr)
             sys.exit(0)
     else:
-        # No snapshot exists, do nothing
         sys.exit(0)
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     try:
+        # Handle empty input safely
+        if sys.stdin.isatty():
+             sys.exit(0)
+
         input_data = json.load(sys.stdin)
         event_name = input_data.get("hook_event_name", "")
         cwd = input_data.get("cwd", os.getcwd())
 
         if event_name == "PreCompact":
             generate_snapshot(cwd)
-            sys.exit(0) # Always continue compaction
+            sys.exit(0)
 
         elif event_name == "SessionStart":
             inject_context(cwd)
