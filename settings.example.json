@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "allow": [
+      "Skill(git-workflow)",
+      "Skill(code-modification)",
+      "Skill(systematic-debugging)",
+      "Skill(test-driven-development)",
+      "Skill(receiving-feedback)",
+      "Skill(auditor)",
+      "Skill(file-ops)",
+      "Skill(tool-guide)",
+      "Skill(doc-updater)",
+      "Skill(writing-skills)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

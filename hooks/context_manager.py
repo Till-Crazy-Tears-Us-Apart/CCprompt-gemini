@@ -153,6 +153,30 @@ def generate_snapshot(cwd):
                 dirs.sort(key=lambda x: (0 if x in ['src', 'lib', 'core', 'app', 'skills', 'hooks'] else 1, x))
                 dir_str = ", ".join([f"`{d}/`" for d in dirs[:15]])
                 reading_list.append(f"- **目录结构**: {dir_str}")
+
+            # [NEW] Scan for Available Skills
+            skills_dir = os.path.join(cwd, "skills")
+            if os.path.isdir(skills_dir):
+                skill_list = []
+                for skill_name in os.listdir(skills_dir):
+                    skill_path = os.path.join(skills_dir, skill_name, "SKILL.md")
+                    if os.path.isfile(skill_path):
+                        # Extract description from frontmatter
+                        description = "Available"
+                        try:
+                            with open(skill_path, 'r', encoding='utf-8') as sf:
+                                for line in sf:
+                                    if line.startswith("description:"):
+                                        description = line.replace("description:", "").strip()
+                                        break
+                        except:
+                            pass
+                        skill_list.append(f"- **{skill_name}**: {description}")
+
+                if skill_list:
+                    reading_list.append("\n## 3. Available Skills (强化提示)")
+                    reading_list.extend(skill_list)
+
         except Exception:
             pass
 
@@ -172,12 +196,13 @@ def generate_snapshot(cwd):
 ## 2. 关键文件索引 (Key References)
 {reading_list_str}
 
-## 3. 会话恢复协议 (Restoration Protocol)
+## 4. 会话恢复协议 (Restoration Protocol)
 **[系统指令]**: 本会话由 `hooks/context_manager.py` 自动恢复。
 
 1.  **状态审查**: 优先检查上方“工作区状态”中的变更文件（如有）。
 2.  **上下文加载**: 必须读取 `CLAUDE.md` 以加载核心 Persona 与工程协议。
-3.  **协议强制**: 严格遵守 `Protocol Commitment` 头信息的约束（中断驱动、禁止黑话）。
+3.  **技能意识**: 查看上方 "Available Skills" 列表，**主动 (Proactively)** 使用相关技能（如 TDD, Debugging）。
+4.  **协议强制**: 严格遵守 `Protocol Commitment` 头信息的约束（中断驱动、禁止黑话）。
 
 **[待办事项]**:
 (由此处开始，AI 应根据上文状态自动推断待办事项，或等待用户指令)

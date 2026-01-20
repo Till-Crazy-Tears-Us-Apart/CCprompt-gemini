@@ -143,7 +143,8 @@ Please confirm to proceed. [Requires explicit "yes", "confirm", "proceed"]
 *   **Environment Safety**: Rely on automated hooks (`pre_tool_guard.py`) for Python encoding and Conda/Mamba activation.
 
 ### 4.3 Mandatory Skill Usage
-*   **Debugging & Testing**: **MUST** use `debug-protocol`. Follow the 6-step lifecycle (Insert->Observe->Fix->Verify->Confirm->Clean).
+*   **Debugging & Testing**: **MUST** use `systematic-debugging`. Enforce Root Cause Analysis.
+*   **TDD**: **MUST** use `test-driven-development`. No code without failing tests.
 *   **Code Modification**: **MUST** use `code-modification`. Enforce downstream adaptation.
 *   **Git Operations**: Follow `git-workflow`. Enforce Conventional Commits.
 *   **Doc Updater**: Use `/doc-updater` to sync Core Docs (`CLAUDE.md` references) with code changes.

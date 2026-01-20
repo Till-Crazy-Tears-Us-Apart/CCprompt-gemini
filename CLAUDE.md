@@ -28,9 +28,11 @@
 
 <!--
 CORE SKILLS MANIFEST (Explicitly Listed for Awareness)
-- debug-protocol: MANDATORY for all debugging/testing tasks. Enforces 6-step probe lifecycle.
+- systematic-debugging: MANDATORY for all debugging/testing tasks. Enforces rigorous root cause analysis.
+- test-driven-development: MANDATORY for new features/fixes. "No production code without a failing test first."
 - code-modification: MANDATORY for refactoring/editing. Enforces safety, framework integrity, and incremental change.
 - git-workflow: MANDATORY for version control. Enforces atomic commits and conventional messages.
+- receiving-feedback: MANDATORY for handling reviews. Verify before implementing.
 -->
 
 <system-reminder>

@@ -30,11 +30,14 @@
 │   └── python-architect.md # 工程师角色卡 (定义语气、反模式与词汇表)
 ├── skills/                # 动态技能库 (按需加载)
 │   ├── auditor/           # 审计代理: 双盲代码审查
-│   ├── debug-protocol/    # 调试协议: Insert -> Observe -> Fix 闭环
+│   ├── systematic-debugging/ # 调试协议: 系统化根因分析
+│   ├── test-driven-development/ # TDD: 红-绿-重构闭环
+│   ├── receiving-feedback/ # 反馈处理: 验证优于盲从
 │   ├── git-workflow/      # Git 规范: Conventional Commits
 │   ├── code-modification/ # 代码修改: 防御性重构
 │   ├── file-ops/          # 文件操作: 批量读写与 PVE 校验
-│   └── tool-guide/        # 工具指南: MCP 选型策略
+│   ├── tool-guide/        # 工具指南: MCP 选型策略
+│   └── writing-skills/    # 技能编写: 技能即代码
 └── hooks/                 # 自动化脚本
     ├── context_manager.py # 上下文快照与恢复
     ├── env_enforcer.py    # 环境约束注入 (Prompt Injection)
@@ -62,3 +65,7 @@
 *   **修改操作**: 遵循 `Analyze` -> `Plan` -> `Ask (Block)` -> `Execute (Silent)` 流程。
 *   **只读操作**: 实行 **Direct Act**，立即执行无需请示。
 *   **调试纪律**: 遵循 `Insert` -> `Observe` -> `Fix` -> `Verify` 闭环，严禁盲目猜测。
+
+## 鸣谢 / Credits
+
+本项目中的部分 Skills (如 `systematic-debugging`, `test-driven-development` 等) 借鉴或移植自 **[superpowers](https://github.com/obra/superpowers)** 项目。特此感谢 Jesse Vincent (obra) 对 Claude Code 社区的贡献。

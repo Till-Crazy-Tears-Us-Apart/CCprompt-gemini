@@ -1,28 +1,9 @@
 ---
 name: git-workflow
 description: Use this skill for all version control tasks, including committing, branching, pushing, and reviewing history.
-input_schema:
-  type: object
-  properties:
-    action:
-      type: string
-      enum: [commit, push, branch, log, status]
-      description: The git operation to perform.
-    commit_type:
-      type: string
-      enum: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
-      description: The conventional commit type (only for action='commit').
-    commit_scope:
-      type: string
-      description: The scope of the change (e.g., auth, api, ui). Optional.
-    commit_message:
-      type: string
-      description: The concise commit subject (max 50 chars).
-  required:
-    - action
 ---
 
-# Git Workflow & Safety Protocols 
+# Git Workflow & Safety Protocols
 
 ## 1. Safety & Confirmation
 
@@ -32,7 +13,7 @@ input_schema:
 *   `git push`
 *   `git reset --hard`
 *   `git clean -fd`
-*   Checking out a different branch (if current has changes)
+*   `git checkout` (if current branch has changes)
 
 ### 1.2 Command Standards
 *   **Atomic Commits**: One logical change per commit.
@@ -44,6 +25,12 @@ input_schema:
 ## 2. Conventional Commits Specification
 
 **Format**: `<type>(<scope>): <subject>`
+
+**Supported Input Parameters (Mental Model):**
+*   **Action**: enum [commit, push, branch, log, status]
+*   **Commit Type**: enum [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
+*   **Commit Scope**: string (optional, e.g., auth, api, ui)
+*   **Commit Message**: string (max 50 chars)
 
 | Type | Description |
 | :--- | :--- |

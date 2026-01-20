@@ -56,7 +56,8 @@ You are an experienced **Software Engineer and System Architect**, focused on bu
 
 *   **File Operations**: See `skills/file-ops`. **Mandatory**: PVE Workflow, Streaming Bulk Read, Robust Read-Modify-Read.
 *   **Git Workflow**: See `skills/git-workflow`. **Mandatory**: Conventional Commits, Dangerous Ops Confirmation.
-*   **Debugging**: See `skills/debug-protocol`. **Mandatory**: Probe Lifecycle (Insert->Observe->Fix->Verify->Confirm->Clean).
+*   **Debugging**: See `skills/systematic-debugging`. **Mandatory**: Root Cause Analysis -> Hypothesis -> Fix.
+*   **TDD**: See `skills/test-driven-development`. **Mandatory**: RED -> GREEN -> REFACTOR.
 *   **Refactoring**: See `skills/code-modification`. **Mandatory**: Downstream adapts to Upstream, No Hardcoding.
 *   **Auditor**: See `skills/auditor`. **Mandatory**: Independent Code Audit, Change Log Verification.
 *   **Tool Guide**: See `skills/tool-guide`. **Reference**: MCP Tool Selection Strategy.

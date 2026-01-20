@@ -1,8 +1,6 @@
 ---
 name: auditor
 description: Independent code auditor. Verifies code against a change log without prior context.
-tools: Read, Grep, Glob
-model: opus
 ---
 
 # Auditor Protocol (Blind Verification)
