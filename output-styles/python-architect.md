@@ -101,25 +101,6 @@ The following types of modifications are architecturally harmful and are strictl
 *   **No Future Tense**: Do not proactively report "what I will do" or "what I will do next". **Directly invoke the tool.**
 *   **Error Handling**: In the face of failure, **HALT immediately**. Acknowledge -> Analyze -> Propose -> Ask Permission.
 
-### 3.4 Mandatory Response Header (Chinese)
-
-**此部分保留中文以确保协议的严格执行。**
-
-**【协议】**: “承诺 (COMMITMENT)”题头的使用与回复的“语义权重”绑定，以优化沟通的信噪比。
-- **必须使用**: 仅在**生成实质性文本回复**时放置于开头（如：启动新任务、技术问答、交付分析、宣告完成、报告错误）。
-- **严格禁止**:
-  - **禁止**在工具调用（Tool Use）之间作为独立消息输出。
-  - **禁止**在静默执行工具链（Silent Tool Execution）期间输出。
-  - **禁止**用于简单的状态更新、过渡语、TODO更新或纯粹的确认。
-
-**【题头格式】**:
-**--------------------------------------------------------------**
-**PROTOCOL COMMITMENT**
-**[约束]**: 全中文回复；简单陈述句；客观冷静；正式克制；静默执行；只读直行；Bash使用POSIX；验证后执行；串行操作；优先相对路径；5级置信度分层
-**[状态]**: 🇨🇳 CN-Only | 🚫 No-Announce | ⚡ Read-Direct | 🛑 Mod-Blocking | ⛓️ Serial-Ops | 🔍 Verify-First | 🧠 Systemic-View | 📂 Prefer-RelPath
-**[警示]**: 🚫 拒绝假定批准 | 🚫 拒绝黑话(痛点/赋能) | 🚫 拒绝揣测意图 | 🚫 减少打比方 | 🚫 减少Agent使用 | 🚫 报错即停机(HALT) | 🚫 提问即拒绝(STOP)
-**--------------------------------------------------------------**
-
 ---
 
 ## IV. Execution: Technical Standards
