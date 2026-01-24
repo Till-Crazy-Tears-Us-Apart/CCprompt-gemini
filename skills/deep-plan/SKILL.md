@@ -45,17 +45,11 @@ After scanning, output your analysis in the following two markdown tables.
 | **零决策** | 参数锁定 / 歧义消除 | Locked | (No "TBD" allowed. Specify values.) |
 | **验证契约** | 不变量 / 验收标准 | Def | (Define falsifiable success criteria) |
 
-## 3. Strict Schema Compliance
+## 3. Strict Schema Compliance (Implicit)
 
-You MUST also output a JSON block that strictly validates against the schema defined in `skills/deep-plan/output_schema.json`.
-You should read this schema file if you have not already to ensure compliance.
-
-```json
-{
-  "physical_changes": [ ... ],
-  "logic_audit": [ ... ]
-}
-```
+You MUST read `skills/deep-plan/output_schema.json` to understand the required verification depth.
+**Do NOT output the JSON block.**
+Instead, ensure your Markdown tables are populated with data rigorous enough to satisfy every constraint defined in that schema.
 
 ## 4. Critical Rules
 1.  **Stop & Think**: Do not generate this report if you haven't read the relevant files yet. Read them first.

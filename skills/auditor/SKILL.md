@@ -67,17 +67,11 @@ Output your analysis in the following two markdown tables.
 | **测试策略** | Pass/Fail | (Check for integration tests) | `tests/...` |
 | **性能安全** | Pass/Fail | (Check loops/memory) | `path:line` |
 
-## 4. Strict Schema Compliance
+## 4. Strict Schema Compliance (Implicit)
 
-You MUST also output a JSON block that strictly validates against the schema defined in `skills/auditor/output_schema.json`.
-You should read this schema file if you have not already to ensure compliance.
-
-```json
-{
-  "intent_verification": [ ... ],
-  "defensive_audit": [ ... ]
-}
-```
+You MUST read `skills/auditor/output_schema.json` to understand the required verification depth.
+**Do NOT output the JSON block.**
+Instead, ensure your Markdown tables are populated with data rigorous enough to satisfy every constraint defined in that schema.
 
 ## 5. Constraints
 - **Read-Only**: You CANNOT modify code.

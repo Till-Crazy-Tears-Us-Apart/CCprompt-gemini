@@ -45,21 +45,24 @@
     *   **自动快照**: 在压缩 (`/compact`) 前自动生成项目状态快照 (`.compact_args.md`)。
     *   **会话热启动**: 新会话启动 (`SessionStart`) 时自动加载快照，实现上下文无缝衔接。
 
-*   **自定义指令**:
-    *   **/log-change**: 生成标准化的变更日志 (`temp_log/`)。
+*   **自定义指令 (已迁移至 Skills)**:
+    *   **log-change**: 生成标准化的变更日志 (`temp_log/`)。
         *   用于将当前上下文的变更“固化”为文档，防止信息丢失，并能在 rewind 时作为交叉验证（初始计划-执行日志-实际代码）的信源之一。
         *   强制包含 Q&A 记录、文件修改摘要、数据流影响分析及 Git 状态验证。
-    *   **/update-tree**: 手动刷新项目树快照。
+    *   **update-tree**: 手动刷新项目树快照。
         *   当进行大规模文件增删（如脚手架生成）后，强制刷新以让 Claude 立即感知新结构。
         *   遵循 `.claude/tree_config` 的排除与深度规则。
 
 *   **动态技能库**:
     *   **systematic-debugging**: 当遇到 Bug、测试失败或意外行为时，执行根因分析与修复闭环。
     *   **test-driven-development**: 当开发新功能或修复 Bug 时，遵循“红-绿-重构”流程，先写测试。
+    *   **deep-plan**: 当完成初步计划 (`Plan`) 后，强制进行“代码外科手术”式的深度架构预审，输出物理变更表与契约审计表。
+    *   **log-change**: 生成结构化变更日志。
+    *   **update-tree**: 手动更新项目树。
     *   **code-modification**: 当重构或修改现有代码时，确保接口兼容性与防御性编程。
     *   **git-workflow**: 当进行版本控制操作时，强制 Conventional Commits 规范与危险操作确认。
     *   **receiving-feedback**: 当接收代码审查意见时，先验证反馈的准确性再实施修改。
-    *   **auditor**: 当需要独立代码审计或生成变更日志时，基于变更日志进行双盲验证。
+    *   **auditor**: 当需要独立代码审计时，基于变更日志进行“意图-日志-代码”三方一致性校验 (Triangulation Verification)。
     *   **file-ops**: 当涉及批量文件读写或 PVE 校验时，确保文件操作的安全性与原子性。
     *   **doc-updater**: 当代码变更影响系统行为时，同步更新核心文档 (`CLAUDE.md`)。
 
@@ -70,13 +73,13 @@
 ├── CLAUDE.md                       # 系统入口，定义核心 Persona 和静态协议
 ├── style.md                        # 统一协议层 (定义 "Can/Cannot" 边界与 Agent 限制)
 ├── settings.example.json           # 配置文件模板 (含 Hooks 配置)
-├── commands/                       # 自定义指令
-│   ├── log-change.md               # /log-change: 生成结构化变更日志
-│   └── update-tree.md              # /update-tree: 手动更新项目树
 ├── output-styles/                  # 输出风格定义
 │   └── python-architect.md         # 工程师角色卡 (定义语气、反模式与词汇表)
 ├── skills/                         # 动态技能库 (按需加载)
-│   ├── auditor/                    # 审计代理: 双盲代码审查
+│   ├── deep-plan/                  # 深度计划: 架构预审协议
+│   ├── auditor/                    # 审计代理: 三方一致性校验
+│   ├── log-change/                 # 日志固化: 变更记录生成
+│   ├── update-tree/                # 树更新: 手动刷新快照
 │   ├── systematic-debugging/       # 调试协议: 系统化根因分析
 │   ├── test-driven-development/    # TDD: 红-绿-重构闭环
 │   ├── receiving-feedback/         # 反馈处理: 验证优于盲从

@@ -1,6 +1,8 @@
 ---
+name: update-tree
 description: Manually update the project tree snapshot (.claude/project_tree.md).
 allowed-tools: Bash
+disable-model-invocation: true
 ---
 
 # Update Project Tree

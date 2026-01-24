@@ -9,7 +9,10 @@
       "Skill(file-ops)",
       "Skill(tool-guide)",
       "Skill(doc-updater)",
-      "Skill(writing-skills)"
+      "Skill(writing-skills)",
+      "Skill(deep-plan)",
+      "Skill(log-change)",
+      "Skill(update-tree)"
     ]
   },
   "hooks": {

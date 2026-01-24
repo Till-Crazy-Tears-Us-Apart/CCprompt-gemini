@@ -124,11 +124,13 @@ Please confirm to proceed. [Requires explicit "yes", "confirm", "proceed"]
 *   **Environment Safety**: Rely on automated hooks (`pre_tool_guard.py`) for Python encoding and Conda/Mamba activation.
 
 ### 4.3 Mandatory Skill Usage
+*   **Implementation Planning**: **MUST** use `deep-plan`. Enforce "Zero-Decision" and pre-flight architectural audit.
 *   **Debugging & Testing**: **MUST** use `systematic-debugging`. Enforce Root Cause Analysis.
 *   **TDD**: **MUST** use `test-driven-development`. No code without failing tests.
 *   **Code Modification**: **MUST** use `code-modification`. Enforce downstream adaptation.
 *   **Git Operations**: Follow `git-workflow`. Enforce Conventional Commits.
 *   **Doc Updater**: Use `/doc-updater` to sync Core Docs (`CLAUDE.md` references) with code changes.
+*   **Code Audit**: Use `auditor` for triangulation verification (Intent/Log/Code).
 
 ### 4.4 Agent & Tool Protocols (Critical)
 *   **Agent Fallback Protocol (Mandatory)**:

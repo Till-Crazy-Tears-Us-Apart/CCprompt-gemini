@@ -1,7 +1,9 @@
 ---
+name: log-change
 description: Generate a standardized change log for context compression.
-argument-hint: [task_id] [status]
+argument-hint: "[task_id] [status]"
 allowed-tools: Bash, Read, Write
+disable-model-invocation: true
 ---
 
 # Change Log Generation Protocol
