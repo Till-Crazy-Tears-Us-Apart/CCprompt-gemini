@@ -1,0 +1,31 @@
+# Tree Config Specification
+# Syntax: <path> [options]
+# Options:
+#   -depth <n>       : Max recursion depth (default: 2). Use -1 for infinite.
+#   -if_file <bool>  : Whether to list files at the deepest level (default: false)
+#
+# Exclusion: Lines starting with '!' are treated as exclusion patterns.
+# Note: Patterns ending with '/' match directories only.
+
+# --- Global Exclusions (Noise Reduction) ---
+!**/.git/
+!**/node_modules/
+!**/venv/
+!**/.venv/
+!**/__pycache__/
+!**/.idea/
+!**/.vscode/
+!**/.DS_Store
+!**/dist/
+!**/build/
+!**/*.pyc
+!**/*.class
+!**/.claude_code/
+
+# --- Inclusion Rules ---
+# Default: Track root with depth 2, showing files (Good for overview)
+. -depth 2 -if_file true
+
+# Example (Uncomment to use):
+# src -depth -1 -if_file true  # Track source code infinitely
+# docs -depth 1 -if_file true  # Track docs shallowly

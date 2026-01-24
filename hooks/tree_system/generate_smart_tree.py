@@ -38,8 +38,31 @@ class TreeGenerator:
     def parse_config(self):
         """Parses the tree_config file."""
         config_path = os.path.join(self.root_dir, CONFIG_FILE)
+
+        # [NEW] Auto-create config from template if missing
         if not os.path.exists(config_path):
-            # Default configuration if file is missing
+            try:
+                # Script is in hooks/tree_system/
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                template_path = os.path.join(script_dir, "default_tree_config.template")
+
+                if os.path.exists(template_path):
+                    with open(template_path, 'r', encoding='utf-8') as src:
+                        content = src.read()
+
+                    # Ensure .claude directory exists
+                    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+
+                    with open(config_path, 'w', encoding='utf-8') as dst:
+                        dst.write(content)
+
+                    print(f"Initialized default config at {CONFIG_FILE}")
+            except Exception as e:
+                # Log error but fall back to hardcoded defaults
+                print(f"Warning: Failed to initialize default config: {e}", file=sys.stderr)
+
+        if not os.path.exists(config_path):
+            # Default configuration if file is still missing
             self.exclusions = [".git", "node_modules", "__pycache__", ".claude_code"]
             self.inclusions = {".": {"depth": DEFAULT_DEPTH, "if_file": True}}
             return
