@@ -77,7 +77,7 @@ class TreeGenerator:
                     self.exclusions.append(line[1:])
                 else:
                     parts = line.split()
-                    path = parts[0]
+                    path = parts[0].rstrip('/')
                     depth = DEFAULT_DEPTH
                     if_file = DEFAULT_IF_FILE
 
