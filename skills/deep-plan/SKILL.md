@@ -57,10 +57,11 @@ Instead, ensure your Markdown tables are populated with data rigorous enough to 
 3.  **No Code Generation**: This step is pure analysis. Do not write implementation code here.
 
 ## 5. Explicit Stop Protocol (MANDATORY)
-**CRITICAL**: You MUST generate ALL tables and analysis text in your response BEFORE calling any tool. The `AskUserQuestion` tool call MUST be the absolute LAST action in your turn.
+**CRITICAL**: You MUST generate ALL tables and analysis text in your response.
 
+**After generating the analysis tables above, you MUST STOP.**
 1.  Do **NOT** write any code.
 2.  Do **NOT** apply any changes.
-3.  Use the `AskUserQuestion` tool to present the user with the option to proceed or revise.
-    *   Question: "Audit Complete. How should we proceed?"
-    *   Options: ["Proceed with Implementation", "Revise Plan", "Cancel"]
+3.  Do **NOT** use the `AskUserQuestion` tool.
+4.  Ends your response with a clear text question to the user:
+    > "Audit Complete. [Proceed with Implementation] / [Revise Plan] / [Cancel]?"

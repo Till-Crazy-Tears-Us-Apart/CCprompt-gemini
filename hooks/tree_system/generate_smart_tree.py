@@ -5,7 +5,7 @@
 @Description : Generates a compact project tree based on .claude/tree_config rules.
                Supports custom depth and file visibility per path.
                Automatically injects reference into CLAUDE.md if missing.
-@Author      : Claude-Code-Assistant
+@Author      : Till-Crazy-Tears-Us-Apart
 @CreationDate: 2026-01-24
 """
 
@@ -298,8 +298,8 @@ def main():
     print(f"Tree generated at {OUTPUT_FILE}")
 
     # Inject reference
-    generator.inject_into_claude_md()
-    print(f"Checked {CLAUDE_MD} for reference.")
+    # generator.inject_into_claude_md() # Disabled: Now handled dynamically by lifecycle_hook
+    # print(f"Checked {CLAUDE_MD} for reference.")
 
 if __name__ == "__main__":
     main()

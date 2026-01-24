@@ -79,9 +79,10 @@ Instead, ensure your Markdown tables are populated with data rigorous enough to 
 - **No Hallucination**: If you can't see a file, say so. Don't guess.
 
 ## 6. Explicit Stop Protocol (MANDATORY)
-**CRITICAL**: You MUST generate ALL tables and analysis text in your response BEFORE calling any tool. The `AskUserQuestion` tool call MUST be the absolute LAST action in your turn.
+**CRITICAL**: You MUST generate ALL tables and analysis text in your response.
 
+**After generating the analysis tables above, you MUST STOP.**
 1.  Do **NOT** propose fixes immediately.
-2.  Use the `AskUserQuestion` tool to prompt for next steps.
-    *   Question: "Audit Findings Generated. Next Step?"
-    *   Options: ["Propose Fixes", "Accept Findings & Close", "Continue Investigating"]
+2.  Do **NOT** use the `AskUserQuestion` tool.
+3.  Ends your response with a clear text question to the user:
+    > "Audit Findings Generated. [Propose Fixes] / [Accept Findings & Close] / [Continue Investigating]?"

@@ -4,7 +4,7 @@
 @FileName    : tree_lifecycle.py
 @Description : Automated project tree updater for SessionStart and PreCompact events.
                Ensures .claude/project_tree.md is fresh BEFORE the system prompts are assembled.
-@Author      : Claude-Code-Assistant
+@Author      : Till-Crazy-Tears-Us-Apart
 @CreationDate: 2026-01-24
 """
 
@@ -59,9 +59,26 @@ def main():
         cwd = input_data.get("cwd", os.getcwd())
 
         # Trigger update on specific lifecycle events
-        if event_name in ["SessionStart", "PreCompact"]:
+        if event_name == "SessionStart":
             update_tree(cwd)
 
+            # Inject tree content as system prompt
+            tree_path = os.path.join(cwd, ".claude", "project_tree.md")
+            try:
+                with open(tree_path, "r", encoding="utf-8") as f:
+                    tree_content = f.read()
+
+                print(json.dumps({
+                    "systemPrompts": [tree_content]
+                }))
+            except Exception:
+                # Fallback if file read fails
+                print(json.dumps({}))
+
+            sys.exit(0)
+
+        if event_name == "PreCompact":
+            update_tree(cwd)
             print(json.dumps({}))
             sys.exit(0)
 

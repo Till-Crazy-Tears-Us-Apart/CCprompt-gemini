@@ -165,13 +165,13 @@ If you pushed back and were wrong:
 State the correction factually and move on.
 
 ## Explicit Stop Protocol (MANDATORY)
-**CRITICAL**: You MUST provide your technical evaluation and verification results in your response BEFORE calling any tool. The `AskUserQuestion` tool call MUST be the absolute LAST action in your turn.
+**CRITICAL**: You MUST provide your technical evaluation and verification results in your response. **After that, you MUST STOP.**
 
 **BEFORE implementing any changes based on feedback:**
 1.  Verify the feedback against the codebase.
-2.  Use `AskUserQuestion` to confirm the implementation plan if there is any ambiguity or risk.
-    *   Question: "Feedback Verified. Proceed with Implementation?"
-    *   Options: ["Proceed", "Discuss/Clarify", "Skip"]
+2.  Do **NOT** use the `AskUserQuestion` tool.
+3.  Ends your response with a clear text question to the user:
+    > "Feedback Verified. [Proceed] / [Discuss/Clarify] / [Skip]?"
 
 ## Common Mistakes
 
