@@ -8,7 +8,8 @@
 
 | 维度 | 要求 | 影响行为 |
 | :--- | :--- | :--- |
-| **软件版本** | Claude Code CLI >= 2.1.8 | 支持事件钩子机制和主动启动skill |
+| **软件版本** | Claude Code CLI >= 2.1.10 | 支持事件钩子机制和主动启动 skill |
+| **操作系统** | Windows 优先 | 兼容路径处理与 Shell 语法 |
 | **开发语言** | Python 3.7+ | 运行 Hooks 脚本 |
 | **运行时环境** | Mamba / Conda | 自动注入 Shell 环境 |
 | **交互语言** | 简体中文 | 协议头与输出强制中文 |
@@ -27,44 +28,48 @@
 
 ## 核心机制
 
-*   **交互约束**:
-    *   **协议注入**: 通过 Hooks 实现强制 **System Prompt Refreshing**，通过高频重复注入协议头（Protocol Header）对抗长上下文带来的指令衰减。
-    *   **中断驱动工作流**: 任何用户提问、条件句或错误报告均被视为 **STOP** 信号。严禁在报错后自动执行“打地鼠”式修复，必须强制停机 (HALT) 并重新请求授权。
-    *   **反俚语过滤器**: 在提示词末尾注入高权重词汇表，并在协议头中显式警示，从源头抑制“痛点/赋能”等非工程化词汇。
+### 1. 交互约束与协议
+*   **协议注入**: 通过 `hooks/env_system/enforcer_hook.py` 实现强制 **System Prompt Refreshing**，对抗长上下文带来的指令衰减。
+*   **中断驱动工作流**: 任何用户提问、条件句或错误报告均被视为 **STOP** 信号。严禁在报错后自动执行“打地鼠”式修复。
+*   **反俚语过滤器**: 在提示词中注入词汇表，从源头抑制“痛点/赋能”等非工程化词汇。
 
-*   **动态文件树**: 自动维护 `.claude/project_tree.md` 项目结构快照。
-    *   **按需精简**: 基于 `.claude/tree_config` 配置文件（默认自动生成），支持针对不同目录的深度 (`-depth`) 和文件可见性 (`-if_file`) 控制。
-    *   **生命周期集成**: 在会话启动 (`SessionStart`) 和压缩前 (`PreCompact`) 自动更新，确保 AI 始终掌握最新项目结构。
-    *   **自动注入**: 自动在 `CLAUDE.md` 中注入引用，实现上下文持久化。
+### 2. 动态文件树
+*   **自动维护**: 基于 `hooks/tree_system/` 自动维护 `.claude/project_tree.md` 快照。
+*   **生命周期集成**: 在会话启动 (`SessionStart`) 和压缩前 (`PreCompact`) 自动更新，确保 AI 掌握最新结构。
+*   **按需精简**: 支持通过 `.claude/tree_config` 控制目录深度和文件可见性。
 
-*   **环境修正**:
-    *   **路径归一化**: 通过 `hooks/pre_tool_guard.py` 拦截绝对路径。若路径位于项目内，自动转换为相对路径并放行；若位于项目外，则阻断并请求确认。
-    *   **Shell 环境注入**: 针对 `Bash` 工具，自动注入 `PYTHONIOENCODING` 及 Conda/Mamba 激活脚本，确保跨平台 Shell 环境一致性。
+### 3. 环境与路径防护
+*   **路径归一化**: 通过 `hooks/pre_tool_guard.py` 拦截绝对路径，自动转换为项目内相对路径。
+*   **Shell 环境增强**: 针对 `Bash` 工具自动注入 `PYTHONIOENCODING` 及 Conda/Mamba 激活脚本。
+*   **Agent 拦截**: 拦截高耗时 Agent（如 `Explore`）并请求用户确认。
 
-*   **上下文管理**:
-    *   **自动快照**: 在压缩 (`/compact`) 前自动生成项目状态快照 (`.compact_args.md`)。
-    *   **会话热启动**: 新会话启动 (`SessionStart`) 时自动加载快照，实现上下文无缝衔接。
+### 4. 上下文持久化
+*   **自动快照**: 通过 `hooks/context_manager.py` 在压缩前生成项目状态快照 (`.compact_args.md`)。
+*   **无缝衔接**: 新会话启动时自动加载快照，恢复分支、提交记录及关键文件索引。
 
-*   **自定义指令 (已迁移至 Skills)**:
-    *   **log-change**: 生成标准化的变更日志 (`temp_log/`)。
-        *   用于将当前上下文的变更“固化”为文档，防止信息丢失，并能在 rewind 时作为交叉验证（初始计划-执行日志-实际代码）的信源之一。
-        *   强制包含 Q&A 记录、文件修改摘要、数据流影响分析及 Git 状态验证。
-    *   **update-tree**: 手动刷新项目树快照。
-        *   当进行大规模文件增删（如脚手架生成）后，强制刷新以让 Claude 立即感知新结构。
-        *   遵循 `.claude/tree_config` 的排除与深度规则。
+### 5. 核心开发工作流
+本项目定义了严格的 "Plan-Act-Verify" 闭环，以下 Skills 需由用户**主动调用** (作为 Slash Commands)：
 
-*   **动态技能库**:
-    *   **systematic-debugging**: 当遇到 Bug、测试失败或意外行为时，执行根因分析与修复闭环。
-    *   **test-driven-development**: 当开发新功能或修复 Bug 时，遵循“红-绿-重构”流程，先写测试。
-    *   **deep-plan**: 当完成初步计划 (`Plan`) 后，强制进行“代码外科手术”式的深度架构预审，输出物理变更表与契约审计表。
-    *   **log-change**: 生成结构化变更日志。
-    *   **update-tree**: 手动更新项目树。
-    *   **code-modification**: 当重构或修改现有代码时，确保接口兼容性与防御性编程。
-    *   **git-workflow**: 当进行版本控制操作时，强制 Conventional Commits 规范与危险操作确认。
-    *   **receiving-feedback**: 当接收代码审查意见时，先验证反馈的准确性再实施修改。
-    *   **auditor**: 当需要独立代码审计时，基于变更日志进行“意图-日志-代码”三方一致性校验 (Triangulation Verification)。
-    *   **file-ops**: 当涉及批量文件读写或 PVE 校验时，确保文件操作的安全性与原子性。
-    *   **doc-updater**: 当代码变更影响系统行为时，同步更新核心文档 (`CLAUDE.md`)。
+1.  **架构预审 (`/deep-plan`)**
+    *   **阶段**: 计划阶段 (Plan)，在编写任何代码之前。
+    *   **功能**: 执行 "零决策" 架构审计，输出 `物理变更预演表` 与 `逻辑契约审计表`，强制识别歧义与副作用。
+
+2.  **工程化修改 (`/code-modification`)**
+    *   **阶段**: 执行阶段 (Act)，获得架构批准后。
+    *   **功能**: 遵循 "Forked Context" 模式，强制执行数据流下游适配、框架完整性检查 (JIT/Numba) 及防御性编程。
+
+3.  **变更固化 (`/log-change`)**
+    *   **阶段**: 修改阶段完成后。
+    *   **功能**: 生成标准化的变更日志 (`temp_log/...`)，记录决策过程 (Q&A)、文件级修改详情及系统影响，作为审计阶段的信源之一。
+
+4.  **上下文回退（`/rewind`）**
+    *   **阶段**: 生成标准化变更日志后。
+    *   **操作**：使用 /rewind 命令将对话上下文回退（Restore conversation only）到计划审计完成后、修改执行前的检查点。
+    *   **功能**：确保 AI 不持对修改过程的记忆，从而避免在后续交互中引入偏见或误导，保持独立性。
+
+5.  **三方审计 (`/auditor`)**
+    *   **阶段**: 验证阶段 (Verify)，代码合并前。
+    *   **功能**: 扮演 "对抗性审计员"，在无上下文前提下，基于变更日志进行 **"意图-日志-代码"** 的三方一致性校验。
 
 ## 目录结构
 
@@ -77,50 +82,40 @@
 │   └── python-architect.md         # 工程师角色卡 (定义语气、反模式与词汇表)
 ├── skills/                         # 动态技能库 (按需加载)
 │   ├── deep-plan/                  # 深度计划: 架构预审协议
-│   ├── auditor/                    # 审计代理: 三方一致性校验
+│   ├── code-modification/          # 代码修改: 工程化改动协议
 │   ├── log-change/                 # 日志固化: 变更记录生成
-│   ├── update-tree/                # 树更新: 手动刷新快照
-│   ├── systematic-debugging/       # 调试协议: 系统化根因分析
-│   ├── test-driven-development/    # TDD: 红-绿-重构闭环
-│   ├── receiving-feedback/         # 反馈处理: 验证优于盲从
-│   ├── git-workflow/               # Git 规范: Conventional Commits
-│   ├── code-modification/          # 代码修改: 防御性重构
-│   ├── file-ops/                   # 文件操作: 批量读写与 PVE 校验
-│   ├── tool-guide/                 # 工具指南: MCP 选型策略
-│   └── writing-skills/             # 技能编写: 技能即代码
-└── hooks/                          # 自动化脚本
-    ├── context_manager.py          # 上下文快照与恢复
-    ├── env_system/
-    │   ├── enforcer_hook.py        # 环境约束注入 (原 env_enforcer.py)
-    │   └── reminder_prompt.md      # 约束提示词
-    ├── tree_system/
-    │   ├── generate_smart_tree.py  # 项目树生成器
-    │   └── lifecycle_hook.py       # 自动更新钩子
-    └── pre_tool_guard.py           # 路径/环境 前置拦截器
+│   ├── auditor/                    # 审计代理: 三方一致性校验
+│   ├── update-tree/                # 树更新: 手动刷新快照 (Proactive 模式)
+│   └── ...                         # 其他工程化技能 (TDD, Debugging, FileOps 等)
+└── hooks/                          # 自动化钩子系统
+    ├── pre_tool_guard.py           # 工具前置拦截 (路径、命名、环境)
+    ├── context_manager.py          # 上下文快照与恢复 (SessionStart/PreCompact)
+    ├── env_system/                 # 约束增强系统
+    │   ├── enforcer_hook.py        # 协议注入 (UserPromptSubmit)
+    │   └── reminder_prompt.md      # 约束提示词配置
+    └── tree_system/                # 项目树自动化
+        ├── generate_smart_tree.py  # 核心生成逻辑
+        └── lifecycle_hook.py       # 生命周期集成
 ```
 
 ## 安装与配置
 
 ### 1. 部署文件
-将本项目内容复制到 Claude Code 全局配置目录：
-*   **macOS/Linux**: `~/.claude/`
-*   **Windows**: `%USERPROFILE%\.claude\` (通常是 `C:\Users\<YourName>\.claude\`)
+将本项目内容复制到 Claude Code 全局配置目录 `%USERPROFILE%\.claude\` / `~/.claude/` 下。
 
 ### 2. 应用配置
-1.  将 `settings.example.json` 的内容合并到您的 `settings.json` 文件中（位于配置目录下）。
-2.  **Windows 用户注意**:
-    *   `settings.json` 不支持 `~` 路径展开。
-    *   必须将所有路径修改为绝对路径 (例如: `C:/Users/YourName/.claude/hooks/...`)。建议使用正斜杠 `/`。
+1.  将 `settings.example.json` 的内容合并到您的 `settings.json` 文件中。
+2.  **路径设置**: 必须将所有路径修改为绝对路径 (例如: `C:/Users/YourName/.claude/hooks/...`)。
 
 ## 协议声明
 
-本配置强制 AI 遵守以下工程原则，违者将触发拦截或协议头警示：
+本配置强制 AI 遵守以下工程原则：
 
-*   **Agent 降级策略**: 鉴于 Thinking Model (如 Gemini 3) 的特性，**Deprecated** `Plan` 和 `Task` Agent。**Prohibited** `Explore` Agent。强制使用 `TodoWrite` + 手动工具链。
+*   **Agent 降级**: 废弃 `Plan` 和 `Task` Agent，严禁使用 `Explore` Agent。强制手动工具链。
 *   **修改操作**: 遵循 `Analyze` -> `Plan` -> `Ask (Block)` -> `Execute (Silent)` 流程。
-*   **只读操作**: 实行 **Direct Act**，立即执行无需请示。
-*   **调试纪律**: 遵循 `Insert` -> `Observe` -> `Fix` -> `Verify` 闭环，严禁盲目猜测。
+*   **命名规范**: 强制新文件使用 `snake_case`。
+*   **调试纪律**: 遵循 `Insert` -> `Observe` -> `Fix` -> `Verify` 闭环。
 
 ## 鸣谢 / Credits
 
-本项目中的部分 Skills (如 `systematic-debugging`, `test-driven-development` 等) 借鉴或移植自 **[superpowers](https://github.com/obra/superpowers)** 项目。特此感谢 Jesse Vincent (obra) 对 Claude Code 社区的贡献。
+本项目中的部分 Skills 借鉴或移植自 **[superpowers](https://github.com/obra/superpowers)** 项目。感谢 Jesse Vincent (obra) 的贡献。
