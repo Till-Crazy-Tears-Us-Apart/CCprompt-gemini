@@ -45,9 +45,10 @@ You must verify the code against the log across these specific dimensions:
 ## 3. Analysis Output (Strict Tables)
 
 You MUST verify the code against the log across the dimensions above.
-Output your analysis in the following two markdown tables.
+Output your analysis in the following two markdown tables. **Add 1 empty line before and after each table.**
 
-### Table 1: Intent vs Implementation (意图与实现对照)
+### 🕵️ Table 1: Intent vs Implementation (意图与实现对照)
+
 *   **Triangulation**: Verify consistency between Initial Plan, Change Log, and Actual Code.
 *   **Verdict**: Report "Discrepancy" if any of the three do not align.
 
@@ -56,7 +57,8 @@ Output your analysis in the following two markdown tables.
 | **API一致性** | 增加 `verify` 接口 | 已添加 `verify` | `def verify(token)` | `src/auth.py:42` | ✅ Match |
 | **数据流** | 软删除逻辑 | 未提及 | 物理删除记录 | `src/db.py:10` | 🔴 Discrepancy |
 
-### Table 2: Defensive Audit (深度防御性审计)
+### 🛡️ Table 2: Defensive Audit (深度防御性审计)
+
 *   **Side Effects**: Check for global state pollution or unintended decorator states.
 *   **Ripple Effects**: Check 1-level deep imports/usages of modified functions.
 
@@ -85,4 +87,4 @@ Instead, ensure your Markdown tables are populated with data rigorous enough to 
 1.  Do **NOT** propose fixes immediately.
 2.  Do **NOT** use the `AskUserQuestion` tool.
 3.  Ends your response with a clear text question to the user:
-    > "Audit Findings Generated. [Propose Fixes] / [Accept Findings & Close] / [Continue Investigating]?"
+    > "审计报告已生成 (Findings Generated). [🛠️提交修复 (Fix)] / [✅接受现状 (Accept)] / [🔍继续调查 (Investigate)]?"

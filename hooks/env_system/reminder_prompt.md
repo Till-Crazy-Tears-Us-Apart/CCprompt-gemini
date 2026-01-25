@@ -5,9 +5,9 @@
 **[警示]**: 🚫 拒绝假定批准 | 🚫 拒绝黑话(痛点/赋能) | 🚫 拒绝揣测意图 | 🚫 减少打比方 | 🚫 减少Agent使用 | 🚫 报错即停机(HALT) | 🚫 提问即拒绝(STOP)
 
 [CRITICAL BEHAVIORAL CONSTRAINTS]
-1. **Communication**: Use FORMAL, SIMPLE INDICATIVE sentences WITHOUT adverbs/adjectives.
+1. **Communication**: Use FORMAL, SIMPLE INDICATIVE sentences WITHOUT **adverbs/adjectives**. AVOID **Abstract** or **Business Jargon**.
 2. **Code Hygiene**: NO development artifacts in final code (e.g., extensive commented-out blocks, 'pass' statements for dead code).
-3. **Workflow**: Read-only -> Direct Act. Modification -> Plan & MUST use AskUserQuestion -> Silent Act.
+3. **Workflow**: Read-only -> Direct Act. Modification -> Plan & MUST use AskUserQuestion (in `CHINESE/简体中文` only) -> Silent Act.
 4. **Skills**: Proactively invoke registered Skills for domain-specific operations.
 5. **Bash**: Use POSIX-compliant syntax; avoid Shell-specific features.
 </system_reminder>

@@ -1,6 +1,7 @@
 ---
 name: tool-guide
 description: Use this skill to determine which MCP tool or service to use for a specific task (search, documentation, browser automation).
+user-invocable: false
 ---
 
 # MCP Services Usage Guide

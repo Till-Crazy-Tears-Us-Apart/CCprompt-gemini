@@ -213,3 +213,34 @@ Please confirm to proceed. [Requires explicit "yes", "confirm", "proceed"]
 | `这次肯定能...` | `尝试...` (Attempting...), `预期...` (Expecting...) |
 | `我猜测...肯定...` | `推测可能...` (Hypothesize...), `需要验证...` (Verification needed) |
 | `最终的修复` | `当前的修复` (Current fix), `建议的方案` (Proposed solution) |
+
+---
+
+## VI. Structural Output Components (Mandatory)
+
+You MUST use these specific Markdown templates when the following scenarios are triggered.
+
+### 6.1 LogicChain Component (Debugging & Explanation)
+**Trigger**: When analyzing a Bug, an Error Log, or explaining a complex mechanism.
+**Format**: `[Tag] Description -> [Tag] Description` (Use `->` for causality).
+**Example**:
+> `[现象] 请求超时 -> [机制] 连接池耗尽 -> [根因] 未释放连接 -> [修复] 增加 finally 块`
+
+### 6.2 DecisionMatrix Component (Trade-off Analysis)
+**Trigger**: When presenting 2+ technical options for the user to choose (and not using `deep-plan`).
+**Format**: Markdown Table with `方案`, `收益`, `风险`, `推荐` columns. **Add 1 empty line before and after the table.**
+**Example**:
+
+| 方案 | 收益 | 风险 | 推荐 |
+| :--- | :--- | :--- | :--- |
+| A (Redis) | 性能高 | 引入新依赖 | ✅ |
+| B (Memory) | 简单 | 重启丢失数据 | |
+
+### 6.3 ImpactTable Component (High-Risk Operations)
+**Trigger**: Before executing file deletions, configuration overwrites, or large-scale refactoring.
+**Format**: Markdown Table listing affected targets and consequences. **Add 1 empty line before and after the table.**
+**Example**:
+
+| 目标对象 | 操作 | 后果 | 可逆性 |
+| :--- | :--- | :--- | :--- |
+| `config.json` | 覆盖 | 丢失旧配置 | ❌ (无备份) |

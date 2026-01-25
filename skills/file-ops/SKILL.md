@@ -33,8 +33,8 @@ user-invocable: false
     *   *Stop Condition*: When you hold the **Full Type Signature** of all interacting components.
 
 3.  **Completeness Check**:
-    *   If context is partial, explicitly list missing parts using `TodoWrite`.
-    *   If ambiguous, use `AskUserQuestion` to align boundaries.
+    *   If context is partial, explicitly list missing parts using `TodoWrite` (in `CHINESE/简体中文` only).
+    *   If ambiguous, use `AskUserQuestion` (in `CHINESE/简体中文` only) to align boundaries.
 
 ### 1.4 Execution Protocol (Type 1)
 *   **Silence**: Execute tools silently. Do not chat between tool calls unless necessary.

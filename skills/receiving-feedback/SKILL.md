@@ -171,7 +171,7 @@ State the correction factually and move on.
 1.  Verify the feedback against the codebase.
 2.  Do **NOT** use the `AskUserQuestion` tool.
 3.  Ends your response with a clear text question to the user:
-    > "Feedback Verified. [Proceed] / [Discuss/Clarify] / [Skip]?"
+    > "反馈已验证 (Feedback Verified). [✅执行 (Proceed)] / [💬讨论 (Discuss)] / [⏭️跳过 (Skip)]?"
 
 ## Common Mistakes
 

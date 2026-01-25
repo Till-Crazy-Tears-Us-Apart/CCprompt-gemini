@@ -2,27 +2,39 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Deep Plan Audit Output",
   "type": "object",
-  "required": ["physical_changes", "logic_audit"],
+  "required": ["ambiguity_resolution", "pbt_specs", "logic_audit", "physical_changes"],
   "properties": {
-    "physical_changes": {
+    "ambiguity_resolution": {
       "type": "array",
-      "description": "物理变更预演表",
+      "description": "Table 1: 歧义消除矩阵 (Ambiguity Resolution Matrix)",
       "items": {
         "type": "object",
-        "required": ["file_path", "location", "action", "summary", "minimalist_check", "ripple_effect"],
+        "required": ["ambiguity", "options", "fixed_constraint", "rationale"],
         "properties": {
-          "file_path": { "type": "string", "description": "文件路径" },
-          "location": { "type": "string", "description": "具体函数/行号" },
-          "action": { "type": "string", "enum": ["Create", "Modify", "Delete"], "description": "操作类型" },
-          "summary": { "type": "string", "description": "修改目的与内容简述" },
-          "minimalist_check": { "type": "string", "description": "最小化验证 (是否触碰无关代码)" },
-          "ripple_effect": { "type": "string", "description": "涟漪效应 (对周边代码的影响)" }
+          "ambiguity": { "type": "string", "description": "决策点/模糊项" },
+          "options": { "type": "string", "description": "可选方案" },
+          "fixed_constraint": { "type": "string", "description": "最终锁定约束" },
+          "rationale": { "type": "string", "description": "锁定理由" }
+        }
+      }
+    },
+    "pbt_specs": {
+      "type": "array",
+      "description": "Table 2: PBT 属性规约 (Property-Based Testing Spec)",
+      "items": {
+        "type": "object",
+        "required": ["module", "property_type", "invariant", "falsification_strategy"],
+        "properties": {
+          "module": { "type": "string", "description": "功能模块" },
+          "property_type": { "type": "string", "enum": ["Idempotency", "Round-trip", "Invariant Preservation", "Commutativity", "Bounds", "State Machine"], "description": "PBT 属性类型" },
+          "invariant": { "type": "string", "description": "数学不变量描述 (e.g. f(x) > 0)" },
+          "falsification_strategy": { "type": "string", "description": "证伪/测试策略" }
         }
       }
     },
     "logic_audit": {
       "type": "array",
-      "description": "逻辑与契约审计表：涵盖数据流、一致性、结构、风险等维度的检查",
+      "description": "Table 3: 逻辑与契约审计表",
       "items": {
         "type": "object",
         "required": ["dimension", "check_item", "status", "contract"],
@@ -36,13 +48,28 @@
               "系统风险 (System Risk)",
               "复杂度 (Complexity)",
               "并发与锁 (Concurrency)",
-              "零决策 (Zero-Decision)",
-              "验证契约 (Verification)"
+              "零决策 (Zero-Decision)"
             ]
           },
-          "check_item": { "type": "string", "description": "具体的检查子项 (如: 上游参数、库函数签名、硬编码)" },
+          "check_item": { "type": "string", "description": "具体检查项" },
           "status": { "type": "string", "enum": ["Pass", "Warn", "Fail", "Locked", "Def"], "description": "审查状态" },
           "contract": { "type": "string", "description": "决策结论、规约或整改措施" }
+        }
+      }
+    },
+    "physical_changes": {
+      "type": "array",
+      "description": "Table 4: 物理变更预演表",
+      "items": {
+        "type": "object",
+        "required": ["file_path", "location", "action", "summary", "minimalist_check", "ripple_effect"],
+        "properties": {
+          "file_path": { "type": "string", "description": "文件路径" },
+          "location": { "type": "string", "description": "具体函数/行号" },
+          "action": { "type": "string", "enum": ["Create", "Modify", "Delete"], "description": "操作类型" },
+          "summary": { "type": "string", "description": "修改目的与内容简述" },
+          "minimalist_check": { "type": "string", "description": "最小化验证" },
+          "ripple_effect": { "type": "string", "description": "涟漪效应" }
         }
       }
     }
