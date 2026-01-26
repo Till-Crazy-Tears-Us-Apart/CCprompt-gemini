@@ -79,6 +79,11 @@ def main():
             print(json.dumps({}))
             sys.exit(0)
 
+        if event_name == "SessionEnd":
+            update_tree(cwd)
+            print(json.dumps({}))
+            sys.exit(0)
+
         # Fallback for unhandled events
         sys.exit(0)
 

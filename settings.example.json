@@ -52,6 +52,16 @@
         ]
       }
     ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"~/.claude/hooks/tree_system/lifecycle_hook.py\""
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

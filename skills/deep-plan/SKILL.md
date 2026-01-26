@@ -22,19 +22,26 @@ Before identifying ambiguities, you MUST verify your knowledge completeness.
 3.  **No Hallucinations**: You are FORBIDDEN from assuming implementation details (e.g., "It likely uses requests") without evidence.
 4.  **Action**: Use `Read`, `Grep`, or `Glob` to saturate your context.
 
-**Step 2: Scan & Ask**
-Once context is saturated, identify all high-level architectural decision points (e.g., Tech Stack, Library Choice, Timeout Values, Error Strategies).
-If ANY decision is not explicitly defined in the context:
-1.  You **MUST** pause and use the `AskUserQuestion` tool.
-2.  **Multi-Question Batching**: Use the `questions` array to present ALL detected ambiguities simultaneously. This will generate multiple headers/tabs (as seen in the UI). You MUST list as many questions as there are unresolved ambiguities.
-3.  **Language (Mandatory)**: All user-facing content in `AskUserQuestion`—including **headers, questions, options, and descriptions**—MUST be in **Simplified Chinese (简体中文)**.
-4.  **Content Requirements**:
-    *   `header`: A very short label (max 12 chars) in Chinese.
-    *   `options`: Provide all reasonable choices. Mark your recommendation with `(推荐)` at the end of the label.
-    *   `description`: Provide a brief rationale (1-2 sentences) for each option in Simplified Chinese, explaining the trade-offs.
+**Step 2: Recursive Ambiguity Elimination (Loop-Until-Saturated)**
+You MUST execute the following loop until NO ambiguities remain:
+
+1.  **Scan**: Identify current architectural decision points based on *saturated* context.
+2.  **Check**: Are there unresolved ambiguities?
+    *   **NO**: Break loop and proceed to "Step 3: Finalize".
+    *   **YES**: Continue to next sub-step.
+3.  **Ask**: Use `AskUserQuestion` to resolve *current layer* ambiguities.
+    *   **Multi-Question Batching**: Present all currently visible ambiguities.
+    *   **Language**: Simplified Chinese (简体中文).
+    *   **Format**: Short header, reasonable options, recommended option marked.
+4.  **Saturate (Again) - ACTION REQUIRED**:
+    *   **Trigger**: Immediately upon receiving the user's choice.
+    *   **Mandate**: You **MUST** invoke `Grep`/`Glob` targeting the specific keywords of the choice (e.g., if user selected "Redis", grep for "redis", "cache", "sentinel").
+    *   **Read**: You **MUST** read any newly discovered configuration/utility files.
+    *   **Blocker**: Do NOT proceed to Step 5 until these new tool outputs are visible in the context.
+5.  **Repeat**: Go back to sub-step 1.
 
 **Step 3: Finalize**
-Only AFTER receiving the user's answers, proceed to generate the "Analysis Output" tables below. Use the user's choices to populate "Table 1".
+Only when the loop terminates (ZERO ambiguities remain), generate the "Analysis Output" tables below.
 
 ## 3. Analysis Output (Strict Tables)
 
