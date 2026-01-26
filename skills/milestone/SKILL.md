@@ -35,6 +35,12 @@ Before generating any files, you MUST perform a deep audit of the work done.
     *   **Language Mandate**: All content MUST be in **Simplified Chinese (简体中文)**.
 3.  **Validation**: Verify the file is saved and the content matches the schema.
 
+### Phase 3: Finalization (Summary Sync)
+After the report is written and verified, you MUST synchronize the summary back to the timeline index.
+
+1.  **Sync**: Run `python skills/milestone/sync_timeline.py`.
+2.  **Verify**: Check that `.claude/history/timeline.md` now contains the meaningful Chinese summary from your report.
+
 ## Content Standards (Strict)
 You MUST adhere to the following 4 rules when writing the report:
 
