@@ -13,9 +13,10 @@ import sys
 import json
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 
 SNAPSHOT_FILE = os.path.join(".claude", "context_snapshot.md")
+LOGIC_INDEX_FILE = os.path.join(".claude", "logic_index.json")
 MAX_STATUS_LINES = 50  # Limit git status output to avoid memory issues
 
 def get_git_env():
@@ -23,6 +24,50 @@ def get_git_env():
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     return env
+
+def check_logic_index_status(cwd):
+    """
+    Checks if logic_index.json exists and if it's stale relative to source code.
+    Returns a warning string if stale, or None if fresh/missing.
+    """
+    index_path = os.path.join(cwd, LOGIC_INDEX_FILE)
+    if not os.path.exists(index_path):
+        return None
+
+    try:
+        # Get index modification time
+        index_mtime = os.path.getmtime(index_path)
+
+        # Check a few key source files to see if they are newer
+        # This is a heuristic check, not exhaustive scan
+        check_dirs = ["hooks", "skills", "src"]
+        is_stale = False
+
+        for d in check_dirs:
+            dir_path = os.path.join(cwd, d)
+            if not os.path.exists(dir_path): continue
+
+            for root, _, files in os.walk(dir_path):
+                for f in files:
+                    if f.endswith('.py'):
+                        file_path = os.path.join(root, f)
+                        if os.path.getmtime(file_path) > index_mtime:
+                            is_stale = True
+                            break
+                if is_stale: break
+            if is_stale: break
+
+        if is_stale:
+            return "⚠️ **逻辑索引已过期** (Source code is newer than index). Run `/update-logic-index` to refresh."
+
+        # Also check expiry based on time (e.g. > 24 hours)
+        if datetime.now().timestamp() - index_mtime > 86400:
+             return "⚠️ **逻辑索引可能陈旧** (Index > 24h old). Consider running `/update-logic-index`."
+
+        return "✅ **逻辑索引有效** (Logic Index is fresh)."
+
+    except Exception:
+        return None
 
 def generate_snapshot(cwd):
     """
@@ -35,6 +80,11 @@ def generate_snapshot(cwd):
         # 1. Capture Git Info
         branch = "Unknown"
         last_commit = "Unknown"
+
+        # [NEW] Check Logic Index Status
+        index_status = check_logic_index_status(cwd)
+        index_status_str = f"\n- {index_status}" if index_status else ""
+
         status_output = ""
 
         # Check if inside git tree
@@ -189,7 +239,7 @@ def generate_snapshot(cwd):
 
 ## 1. 项目状态概览 (Project State)
 - **当前分支**: `{branch}`
-- **最近提交**: `{last_commit}`
+- **最近提交**: `{last_commit}`{index_status_str}
 - **工作区状态**:
 ```text
 {status_output.strip()}

@@ -1,0 +1,24 @@
+# Logic Indexer Configuration
+# Use ! prefix to exclude directories or files.
+# Patterns ending with / match directories only.
+# Supports fnmatch wildcards (*, ?).
+
+!**/.git/
+!**/node_modules/
+!**/__pycache__/
+!**/.claude_code/
+!**/.claude/
+!**/.ideas/
+!**/.vscode/
+!**/dist/
+!**/build/
+!tests/
+!test/
+!*.log
+!*.pyc
+!**/*.pyc
+!**/.DS_Store
+!**/venv/
+!**/.compact_args.md
+!**/LICENSE
+!.gitignore

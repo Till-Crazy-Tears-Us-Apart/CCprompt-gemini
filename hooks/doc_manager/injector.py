@@ -22,7 +22,8 @@ CLAUDE_MD = "CLAUDE.md"
 # </tag_name>
 REGISTRY = {
     "project_structure": ".claude/project_tree.md",
-    "history_timeline": ".claude/history/timeline.md"
+    "history_timeline": ".claude/history/timeline.md",
+    "logic_tree": ".claude/logic_tree.md"
 }
 
 def inject_all(cwd):

@@ -23,3 +23,7 @@ temp_log/
 .settings.json
 .ideas/
 .claude/
+.claude/logic_index.json
+.claude/logic_tree.md
+patch_logicindex/
+tests/
