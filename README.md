@@ -33,7 +33,7 @@
 *   **中断驱动工作流**: 任何用户提问、条件句或错误报告均被视为 **STOP** 信号。严禁在报错后自动执行“打地鼠”式修复。
 *   **反俚语过滤器**: 在提示词中注入词汇表，从源头抑制“痛点/赋能”等非工程化词汇。
 
-### 2. 动态文件树
+### 2. 动态文件树 [📖 Doc](skills/update-tree/README.md)
 *   **自动维护**: 基于 `hooks/tree_system/` 自动维护 `.claude/project_tree.md` 快照。
 *   **生命周期集成**: 在会话启动 (`SessionStart`) 和压缩前 (`PreCompact`) 自动更新，确保 AI 掌握最新结构。
 *   **自动注入**： 将项目树注入 `CLAUDE.md`，为 AI 提供结构化导航。
@@ -50,7 +50,7 @@
 *   **Shell 环境增强**: 针对 `Bash` 工具自动注入 `PYTHONIOENCODING` 及 Conda/Mamba 激活脚本。
 *   **Agent 拦截**: 拦截高耗时 Agent（如 `Explore`）并请求用户确认。
 
-### 4. 上下文持久化
+### 4. 上下文持久化 [📖 Doc](skills/milestone/README.md)
 *   **自动快照**: 通过 `hooks/context_manager.py` 在压缩前生成项目状态快照 (`.claude/context_snapshot.md`)。
 *   **无缝衔接**: 新会话启动时自动加载快照，恢复分支、提交记录及关键文件索引。
 *   **历史索引 (Milestone System)**:
@@ -58,10 +58,17 @@
     *   **持久化**: 通过 `/milestone` 命令生成结构化历史报告，并更新 `.claude/history/timeline.md` 索引。
     *   **渐进披露**: `CLAUDE.md` 仅引用 Timeline 索引，AI 根据需要按需读取具体的历史报告，从而在保持长期记忆的同时节省 Token 上下文。
 
-### 5. 开发工作流
+### 5. 逻辑索引 [📖 Doc](skills/update-logic-index/README.md)
+*   **更新机制 (`/update-logic-index`)**
+    *   **核心功能**: 基于 AST 解析与 Gemini API 推理，生成跨文件语义摘要与数据流向标签 (`[Source]/[Sink]`)。
+    *   **上下文注入**: 将生成的 `.claude/logic_tree.md` 自动注入到 `CLAUDE.md`，使 AI 在不读取源码的情况下理解项目逻辑。
+    *   **增量特性**: 支持依赖感知哈希，仅重新分析受影响的文件，兼顾成本与实时性。
+*   **手动触发**: 通过 `/update-logic-index` 命令主动刷新逻辑索引，确保其与代码变更同步。
+
+### 6. 开发工作流
 本项目定义了严格的 "Plan-Act-Verify" 闭环，以下 Skills 或 Commands 需由用户**主动调用**：
 
-1.  **架构预审 (`/deep-plan`)**
+1.  **架构预审 (`/deep-plan`)** [📖 Doc](skills/deep-plan/README.md)
     *   **阶段**: 计划阶段 (Plan)，在编写任何代码之前。
     *   **流程**:
         1.  **Context Saturation**: 递归式阅读源码定义，消除幻觉。
@@ -73,11 +80,7 @@
             *   `物理变更预演` (文件级操作)
     *   **功能**: 执行 "零决策" 架构审计，强制识别歧义与副作用。
 
-2.  **逻辑索引更新 (`/update-logic-index`)**
-    *   **阶段**: 引入新依赖、重构核心逻辑或阅读大型项目前。
-    *   **功能**: 基于 AST 解析与 Gemini API 推理，生成跨文件语义摘要与数据流向标签 (`[Source]/[Sink]`)，并自动注入到 `CLAUDE.md` 上下文中。支持增量更新与依赖感知哈希。
-
-3.  **代码修改 (`/code-modification`)**
+2.  **代码修改 (`/code-modification`)**
     *   **阶段**: 执行阶段 (Act)，获得架构批准后。
     *   **功能**: 遵循 "Forked Context" 模式，强制执行数据流下游适配、框架完整性检查 (JIT/Numba) 及防御性编程。
 
@@ -100,6 +103,10 @@
     *   **阶段**: 阶段性任务完成或 `/compact` 之前。
     *   **功能**: 手动触发生成结构化历史报告，记录技术决策、实验结果与遗留问题，并更新 `.claude/history/timeline.md` 索引。构建长期记忆，实现渐进式历史回顾。
 
+8.  **项目树更新 (`/update-tree`)**
+    *   **阶段**: 文件结构变更后。
+    *   **功能**: 主动刷新 `.claude/project_tree.md` 快照，确保 AI 掌握最新文件结构。支持按需配置扫描深度。
+
 ## 目录结构
 
 ```text
@@ -110,13 +117,13 @@
 ├── output-styles/                  # 输出风格定义
 │   └── python-architect.md         # 工程师角色卡 (定义语气、反模式与词汇表)
 ├── skills/                         # 动态技能库 (按需加载)
-│   ├── deep-plan/                  # [深度计划](skills/deep-plan/README.md): 架构预审协议
-│   ├── update-logic-index/         # [逻辑索引](skills/update-logic-index/README.md): 语义摘要生成 (AST + Gemini)
+│   ├── deep-plan/                  # 深度计划: 架构预审协议
 │   ├── code-modification/          # 代码修改: 工程化改动协议
 │   ├── log-change/                 # 日志固化: 变更记录生成
 │   ├── auditor/                    # 审计代理: 三方一致性校验
-│   ├── milestone/                  # [里程碑](skills/milestone/README.md): 历史记录与阶段性总结
-│   ├── update-tree/                # [树更新](skills/update-tree/README.md): 手动刷新快照 (Proactive 模式)
+│   ├── milestone/                  # 里程碑: 历史记录与阶段性总结
+│   ├── update-tree/                # 树更新: 手动刷新快照 (Proactive 模式)
+│   ├── update-logic-index/         # 逻辑索引: 语义摘要生成 (AST + Gemini)
 │   └── ...                         # 其他工程化技能 (TDD, Debugging, FileOps 等)
 └── hooks/                          # 自动化钩子系统
     ├── doc_manager/                # 文档管理

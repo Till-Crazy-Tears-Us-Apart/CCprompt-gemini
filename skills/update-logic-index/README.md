@@ -25,9 +25,9 @@ Logic Indexer 是一个基于 AST（抽象语法树）和 Google Gemini API 的�
 ```json
 {
   "env": {
-    "GEMINI_API_KEY": "sk-...",
+    "GEMINI_API_KEY": "...",
     "GEMINI_MODEL": "gemini-3-flash-preview",
-    "GEMINI_MAX_WORKERS": "5",
+    "GEMINI_MAX_WORKERS": "2",
     "GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
     "GEMINI_RETRY_LIMIT": "3",
     "GEMINI_TIMEOUT": "60"
