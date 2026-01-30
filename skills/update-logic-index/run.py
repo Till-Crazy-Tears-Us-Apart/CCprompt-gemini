@@ -182,12 +182,27 @@ class LogicIndexer:
             }],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 100,
-                "thinking_config": {
-                    "thinking_level": thinking_level
+                "maxOutputTokens": 1000,
+                "responseMimeType": "application/json",
+                "responseSchema": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "summary": {"type": "string"}
+                        },
+                        "required": ["name", "summary"]
+                    }
                 }
             }
         }
+
+        # Handle Thinking Level separately as it's model-dependent
+        if thinking_level != "minimal":
+             data["generationConfig"]["thinking_config"] = {
+                "thinking_level": thinking_level
+            }
 
         retries = 0
         while retries <= self.retry_limit:
@@ -344,44 +359,75 @@ class LogicIndexer:
             # Fallback if file not found
             return "Task: Summarize Python code: {source_code}"
 
-    def _worker_task(self, item):
-        """Helper for worker execution to allow pickling if needed (though ThreadPool doesn't pickle)"""
+    def _worker_task(self, file_path, items):
+        """Processes multiple symbols for a single file."""
         if self.circuit_open:
-            return None, None
+            return
 
-        path, symbol, source_code = item
+        try:
+            with open(os.path.join(self.root_dir, file_path), 'r', encoding='utf-8') as f:
+                source_code = f.read()
+        except Exception as e:
+            print(f"Error reading {file_path} for batch: {e}")
+            return
+
+        # Check for token overflow (approximate)
+        if len(source_code) / 3 > 30000: # Simple heuristic for ~30k tokens
+            print(f"File {file_path} too large for batch. Falling back to atomic mode.")
+            for symbol, segment in items:
+                prompt_template = self._load_prompt_template()
+                # Construct atomic prompt from template (adapting template for single mode)
+                prompt = f"Target Symbol: {symbol['name']}\nSource Code:\n{segment}\n\nPlease follow the summary rules and return as JSON object within a list."
+                level = self._determine_thinking_level(segment)
+                res = self._call_gemini(prompt, thinking_level=level)
+                try:
+                    data = json.loads(res)
+                    symbol['summary'] = data[0]['summary'] if isinstance(data, list) else data['summary']
+                except Exception:
+                    symbol['summary'] = res
+            return
+
+        target_names = [item[0]['name'] for item in items]
         prompt_template = self._load_prompt_template()
         prompt = prompt_template.format(
-            symbol_type=symbol['type'],
-            source_code=source_code
+            source_code=source_code,
+            target_symbols=", ".join(target_names)
         )
+
         level = self._determine_thinking_level(source_code)
-        summary = self._call_gemini(prompt, thinking_level=level)
-        symbol['summary'] = summary
-        return path, symbol
+        res = self._call_gemini(prompt, thinking_level=level)
+
+        try:
+            summaries = json.loads(res)
+            # Map results back to symbols
+            summary_map = {s['name']: s['summary'] for s in summaries if 'name' in s and 'summary' in s}
+            for symbol, _ in items:
+                if symbol['name'] in summary_map:
+                    symbol['summary'] = summary_map[symbol['name']]
+                else:
+                    print(f"Warning: No summary returned for {symbol['name']} in {file_path}")
+        except Exception as e:
+            print(f"Error parsing batch response for {file_path}: {e}")
 
     def process_llm_queue(self):
-        """Process dirty nodes concurrently or serially."""
+        """Process dirty nodes grouped by file to minimize API calls."""
         if not self.dirty_nodes:
             return
 
-        print(f"Generating summaries for {len(self.dirty_nodes)} symbols (Workers: {self.max_workers})...")
+        # Group by file
+        batches = {}
+        for file_path, symbol, segment in self.dirty_nodes:
+            if file_path not in batches:
+                batches[file_path] = []
+            batches[file_path].append((symbol, segment))
 
-        # Serial Fallback
-        if self.max_workers <= 1:
-            try:
-                for i, item in enumerate(self.dirty_nodes):
-                    if self.circuit_open: break
-                    path, symbol = self._worker_task(item)
-            except FatalError as e:
-                print(f"\n{e}")
-            return
+        print(f"Generating summaries for {len(self.dirty_nodes)} symbols across {len(batches)} files (Workers: {self.max_workers})...")
 
-        # Concurrent Execution
+        # Concurrent Execution across files
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = [executor.submit(self._worker_task, item) for item in self.dirty_nodes]
+            futures = [executor.submit(self._worker_task, fp, items) for fp, items in batches.items()]
             try:
-                for i, future in enumerate(concurrent.futures.as_completed(futures)):
+                for future in concurrent.futures.as_completed(futures):
                     if self.circuit_open:
                         executor.shutdown(wait=False, cancel_futures=True)
                         break
@@ -393,7 +439,7 @@ class LogicIndexer:
                         executor.shutdown(wait=False, cancel_futures=True)
                         break
                     except Exception as e:
-                        print(f"Error processing item: {e}")
+                        print(f"Error processing file batch: {e}")
             except KeyboardInterrupt:
                 print("\nInterrupted by user. Shutting down...")
                 executor.shutdown(wait=False, cancel_futures=True)
