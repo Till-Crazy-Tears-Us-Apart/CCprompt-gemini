@@ -63,7 +63,7 @@ Logic Indexer 针对 Gemini 3 Flash 模型采用了动态 Thinking Level 策略�
 
 > **提示**: 尽量为代码编写 Docstring！如果函数有 Docstring，系统会直接使用它（`[Doc]` 模式），完全不调用 API，成本为 0。
 
-## 🔧 故障排除 (Troubleshooting)
+## 🔧 故障排除
 
 ### Q: 遇到 `Fatal API Error 429: Rate limit exceeded`？
 **A**: Gemini 免费层级或低配额账号容易触发限流。
