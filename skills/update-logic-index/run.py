@@ -9,7 +9,7 @@
                - Concurrent API calls (ThreadPoolExecutor)
                - Zero-dependency (Standard Library only)
 @Author      : Logic Indexer Skill
-@Version     : 1.1.0
+@Version     : 1.2.0
 """
 
 import ast
@@ -28,6 +28,7 @@ from pathlib import Path
 from datetime import datetime
 
 # --- Configuration ---
+VERSION = "1.2.0"
 CACHE_FILE = os.path.join(".claude", "logic_index.json")
 CONFIG_FILE = os.path.join(".claude", "logic_index_config")
 OUTPUT_MD = os.path.join(".claude", "logic_tree.md")
@@ -36,6 +37,69 @@ DEFAULT_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{mode
 DEFAULT_MAX_WORKERS = 5
 DEFAULT_RETRY_LIMIT = 3
 DEFAULT_TIMEOUT = 60
+MAX_CTX_CHARS = 200000
+
+class ImportVisitor(ast.NodeVisitor):
+    """AST visitor to collect internal imports."""
+    def __init__(self, root_dir, current_file_path):
+        self.root_dir = root_dir
+        self.current_dir = os.path.dirname(current_file_path)
+        self.internal_imports = []
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            self._add_import(alias.name)
+
+    def visit_ImportFrom(self, node):
+        # Base module name (e.g. 'pkg' in 'from pkg import ...')
+        module = node.module or ""
+
+        for alias in node.names:
+            # Construct potential sub-module path
+            if module:
+                full_name = f"{module}.{alias.name}"
+            else:
+                full_name = alias.name
+
+            # Try to resolve specific submodule first (e.g. pkg.module_a)
+            if self._add_import(full_name, node.level):
+                continue
+
+            # If specific submodule not found, try base module (e.g. pkg containing ClassA)
+            # Only if module is not empty (avoid trying to import empty string)
+            if module:
+                self._add_import(module, node.level)
+
+    def _add_import(self, module_name, level=0):
+        # Resolve to potential file path
+        if module_name:
+            parts = module_name.split('.')
+        else:
+            parts = []
+
+        if level > 0:
+            # Relative import
+            base = self.current_dir
+            for _ in range(level - 1):
+                base = os.path.dirname(base)
+            potential_path = os.path.join(base, *parts)
+        else:
+            # Absolute import (check if starts with internal package)
+            potential_path = os.path.join(self.root_dir, *parts)
+
+        # Check .py or /__init__.py
+        py_file = potential_path + ".py"
+        init_file = os.path.join(potential_path, "__init__.py")
+
+        found = False
+        if os.path.exists(py_file):
+            self.internal_imports.append(os.path.relpath(py_file, self.root_dir).replace(os.sep, '/'))
+            found = True
+        elif os.path.exists(init_file):
+            self.internal_imports.append(os.path.relpath(init_file, self.root_dir).replace(os.sep, '/'))
+            found = True
+
+        return found
 
 class FatalError(Exception):
     """Custom exception to trigger circuit breaker and halt execution."""
@@ -127,25 +191,32 @@ class LogicIndexer:
         if os.path.exists(CACHE_FILE):
             try:
                 with open(CACHE_FILE, 'r', encoding='utf-8') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    # Schema Version Check
+                    cache_version = data.get("_meta", {}).get("version", "1.1.0")
+                    if cache_version != VERSION:
+                        print(f"检测到缓存版本升级 ({cache_version} -> {VERSION})。正在重置缓存...")
+                        return {}
+                    return data
             except Exception:
                 pass
         return {}
 
     def _save_cache(self):
         os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-        # Add timestamp for expiry check
+        # Add timestamp and version for expiry/migration check
         self.cache["_meta"] = {
             "last_updated": datetime.now().isoformat(),
-            "model": self.model
+            "model": self.model,
+            "version": VERSION
         }
         with open(CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(self.cache, f, ensure_ascii=False, indent=2)
 
-    def _calculate_hash(self, source_code):
-        """Calculates MD5 hash of normalized source code."""
+    def _calculate_hash(self, source_code, extra_data=""):
+        """Calculates MD5 hash of normalized source code and optional dependency data."""
         # Normalize: strip whitespace to ignore formatting changes
-        normalized = "".join(source_code.split())
+        normalized = "".join(source_code.split()) + extra_data
         return hashlib.md5(normalized.encode('utf-8')).hexdigest()
 
     def _determine_thinking_level(self, source_code):
@@ -184,7 +255,7 @@ class LogicIndexer:
                 "temperature": 0.2,
                 "maxOutputTokens": 1000,
                 "responseMimeType": "application/json",
-                "responseSchema": {
+                "responseJsonSchema": {
                     "type": "array",
                     "items": {
                         "type": "object",
@@ -200,8 +271,8 @@ class LogicIndexer:
 
         # Handle Thinking Level separately as it's model-dependent
         if thinking_level != "minimal":
-             data["generationConfig"]["thinking_config"] = {
-                "thinking_level": thinking_level
+             data["generationConfig"]["thinkingConfig"] = {
+                "thinkingLevel": thinking_level
             }
 
         retries = 0
@@ -209,10 +280,25 @@ class LogicIndexer:
             try:
                 req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers)
                 with urllib.request.urlopen(req, context=self.ssl_context, timeout=self.timeout) as response:
-                    result = json.loads(response.read().decode('utf-8'))
+                    raw_data = response.read().decode('utf-8')
+                    result = json.loads(raw_data)
                     try:
-                        return result['candidates'][0]['content']['parts'][0]['text'].strip()
+                        text_content = result['candidates'][0]['content']['parts'][0]['text'].strip()
+
+                        # Robust JSON Extraction
+                        try:
+                            # 1. Try direct parse (fast path)
+                            json.loads(text_content)
+                            return text_content
+                        except json.JSONDecodeError:
+                            # 2. Try to extract from markdown blocks
+                            if "```json" in text_content:
+                                text_content = text_content.split("```json")[1].split("```")[0].strip()
+                            elif "```" in text_content:
+                                text_content = text_content.split("```")[1].split("```")[0].strip()
+                            return text_content
                     except (KeyError, IndexError):
+                        print(f"API Debug - Response Structure: {json.dumps(result)[:500]}")
                         return "Error: Unexpected API response format."
             except urllib.error.HTTPError as e:
                 # Fatal errors: Auth or Rate Limit
@@ -250,15 +336,33 @@ class LogicIndexer:
             print(f"Skipping {rel_path}: {e}")
             return None
 
+        # Resolve imports
+        visitor = ImportVisitor(self.root_dir, file_path)
+        visitor.visit(tree)
+        imports = list(set(visitor.internal_imports))
+
+        # Calculate dependency-aware hash
+        dep_summaries = []
+        for imp_path in imports:
+            cached_imp = self.cache.get(imp_path)
+            if cached_imp:
+                for sym in cached_imp.get("symbols", []):
+                    if sym.get("summary"):
+                        dep_summaries.append(f"{sym['name']}:{sym['summary']}")
+
+        extra_data = "|".join(sorted(dep_summaries))
+        file_hash = self._calculate_hash(source, extra_data)
+
         file_node = {
             "path": rel_path,
-            "hash": self._calculate_hash(source), # File-level hash
+            "hash": file_hash,
+            "imports": imports,
             "symbols": []
         }
 
-        # Check if file changed
+        # Check if file or dependencies changed
         cached_file = self.cache.get(rel_path)
-        file_changed = not cached_file or cached_file.get("hash") != file_node["hash"]
+        file_changed = not cached_file or cached_file.get("hash") != file_hash
 
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -269,7 +373,6 @@ class LogicIndexer:
                     for subnode in node.body:
                         if isinstance(subnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
                             # Prefix method name with class name for clarity
-                            # We create a clone or modify name temporarily for processing
                             original_name = subnode.name
                             subnode.name = f"{node.name}.{original_name}"
                             self._process_node(subnode, source, file_node, file_changed, cached_file)
@@ -359,7 +462,7 @@ class LogicIndexer:
             # Fallback if file not found
             return "Task: Summarize Python code: {source_code}"
 
-    def _worker_task(self, file_path, items):
+    def _worker_task(self, file_path, items, context_summaries=""):
         """Processes multiple symbols for a single file."""
         if self.circuit_open:
             return
@@ -377,7 +480,7 @@ class LogicIndexer:
             for symbol, segment in items:
                 prompt_template = self._load_prompt_template()
                 # Construct atomic prompt from template (adapting template for single mode)
-                prompt = f"Target Symbol: {symbol['name']}\nSource Code:\n{segment}\n\nPlease follow the summary rules and return as JSON object within a list."
+                prompt = f"Target Symbol: {symbol['name']}\nDependencies:\n{context_summaries}\nSource Code:\n{segment}\n\nPlease follow the summary rules and return as JSON object within a list."
                 level = self._determine_thinking_level(segment)
                 res = self._call_gemini(prompt, thinking_level=level)
                 try:
@@ -391,13 +494,18 @@ class LogicIndexer:
         prompt_template = self._load_prompt_template()
         prompt = prompt_template.format(
             source_code=source_code,
-            target_symbols=", ".join(target_names)
+            target_symbols=", ".join(target_names),
+            context_summaries=context_summaries
         )
 
         level = self._determine_thinking_level(source_code)
         res = self._call_gemini(prompt, thinking_level=level)
 
         try:
+            if res.startswith("Error:"):
+                print(f"API Error for {file_path}: {res}")
+                return
+
             summaries = json.loads(res)
             # Map results back to symbols
             summary_map = {s['name']: s['summary'] for s in summaries if 'name' in s and 'summary' in s}
@@ -408,6 +516,7 @@ class LogicIndexer:
                     print(f"Warning: No summary returned for {symbol['name']} in {file_path}")
         except Exception as e:
             print(f"Error parsing batch response for {file_path}: {e}")
+            print(f"Raw response: {res[:200]}...")
 
     def process_llm_queue(self):
         """Process dirty nodes grouped by file to minimize API calls."""
@@ -423,9 +532,33 @@ class LogicIndexer:
 
         print(f"Generating summaries for {len(self.dirty_nodes)} symbols across {len(batches)} files (Workers: {self.max_workers})...")
 
+        # Prepare context summaries for each batch
+        batch_args = []
+        for fp, items in batches.items():
+            file_node = self.cache.get(fp)
+            ctx_summary = ""
+            if file_node and file_node.get("imports"):
+                dep_list = []
+                current_chars = 0
+                for imp_path in file_node["imports"]:
+                    cached_imp = self.cache.get(imp_path)
+                    if cached_imp:
+                        for s in cached_imp.get("symbols", []):
+                            if s.get("summary"):
+                                line = f"- {s['name']}: {s['summary']}"
+                                if current_chars + len(line) + 1 > MAX_CTX_CHARS:
+                                    print(f"Warning: Dependency context truncated for {fp} (Limit: {MAX_CTX_CHARS} chars)")
+                                    break
+                                dep_list.append(line)
+                                current_chars += len(line) + 1
+                        if current_chars > MAX_CTX_CHARS:
+                            break
+                ctx_summary = "\n".join(dep_list)
+            batch_args.append((fp, items, ctx_summary))
+
         # Concurrent Execution across files
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = [executor.submit(self._worker_task, fp, items) for fp, items in batches.items()]
+            futures = [executor.submit(self._worker_task, *args) for args in batch_args]
             try:
                 for future in concurrent.futures.as_completed(futures):
                     if self.circuit_open:

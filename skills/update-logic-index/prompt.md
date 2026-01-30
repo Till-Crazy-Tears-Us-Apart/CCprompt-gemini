@@ -2,6 +2,8 @@ Task: Analyze the provided Python source code and generate summaries for the spe
 
 Input Data:
 - Target Symbols: {target_symbols}
+- Dependencies (Context):
+{context_summaries}
 - Source Code:
 {source_code}
 
@@ -15,7 +17,10 @@ Constraints:
    - Focus on responsibility/intent.
    - If it's a test function, start with [Test].
    - If it's a utility, start with [Util].
+   - If a function acts as a Data Source, use [Source] prefix.
+   - If a function acts as a Data Sink, use [Sink] prefix.
 4. Only summarize symbols listed in "Target Symbols".
+5. Leverage the provided "Dependencies" to understand the cross-file logic and data flow.
 
 Output Format (JSON):
 [
