@@ -25,14 +25,14 @@ Logic Indexer 是一个基于 AST（抽象语法树）和 Google Gemini API 的�
 
 ### 1. 环境变量 (`settings.json`)
 
-在项目的 `settings.json` (或全局 `~/.claude/settings.json`) 中配置以下参数：
+在项目的 `settings.local.json` (或全局 `~/.claude/settings.json`) 中配置以下示例参数：
 
 ```json
 {
   "env": {
     "GEMINI_API_KEY": "...",
     "GEMINI_MODEL": "gemini-3-flash-preview",
-    "GEMINI_MAX_WORKERS": "2",
+    "GEMINI_MAX_WORKERS": "3",
     "GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
     "GEMINI_RETRY_LIMIT": "3",
     "GEMINI_TIMEOUT": "60"
@@ -42,7 +42,7 @@ Logic Indexer 是一个基于 AST（抽象语法树）和 Google Gemini API 的�
 
 | 变量名 | 默认值 | 说明 |
 | :--- | :--- | :--- |
-| `GEMINI_MAX_WORKERS` | `5` | 并发线程数。若遇 429 限流，请调低此值（建议 1-3）。 |
+| `GEMINI_MAX_WORKERS` | `3` | 并发线程数。若遇 429 限流，请调低此值（建议 1-3）。 |
 | `GEMINI_RETRY_LIMIT` | `3` | API 失败重试次数。 |
 | `GEMINI_TIMEOUT` | `60` | 单次请求超时时间（秒）。 |
 | `GEMINI_MAX_OUTPUT_TOKENS` | `8192` | 响应 Token 上限，防止大文件摘要截断。 |
