@@ -2,10 +2,13 @@
   "env": {
     "GEMINI_API_KEY": "YOUR_API_KEY_HERE",
     "GEMINI_MODEL": "gemini-3-flash-preview",
-    "GEMINI_MAX_WORKERS": "2",
+    "GEMINI_MAX_WORKERS": "3",
     "GEMINI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta",
     "GEMINI_RETRY_LIMIT": "3",
-    "GEMINI_TIMEOUT": "60"
+    "GEMINI_TIMEOUT": "60",
+    "GEMINI_MAX_OUTPUT_TOKENS": "8192",
+    "LOGIC_INDEX_AUTO_INJECT": "ALWAYS",
+    "LOGIC_INDEX_FILTER_SMALL": "false"
   },
   "permissions": {
     "allow": [
@@ -22,6 +25,7 @@
       "Skill(milestone)",
       "Skill(log-change)",
       "Skill(update-tree)",
+      "Skill(read-logic-index)",
       "Skill(update-logic-index)"
     ]
   },

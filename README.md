@@ -64,6 +64,7 @@
     *   **核心功能**: 基于 AST 解析与 Gemini API 推理，生成跨文件语义摘要与数据流向标签 (`[Source]/[Sink]`)。
     *   **上下文注入**: 将生成的 `.claude/logic_tree.md` 自动注入到 `CLAUDE.md`，使 AI 在不读取源码的情况下理解项目逻辑。
     *   **增量特性**: 支持依赖感知哈希，仅重新分析受影响的文件，兼顾成本与实时性。
+    *   **版本感知**: 自动记录 Git Commit Hash 与时间戳，确保上下文与代码版本严格对应。
 *   **手动触发**: 通过 `/update-logic-index` 命令主动刷新逻辑索引，确保其与代码变更同步。
 
 ### 6. 开发工作流
@@ -125,6 +126,7 @@
 │   ├── milestone/                  # 里程碑: 历史记录与阶段性总结
 │   ├── update-tree/                # 树更新: 手动刷新快照 (Proactive 模式)
 │   ├── update-logic-index/         # 逻辑索引: 语义摘要生成 (AST + Gemini)
+│   ├── read-logic-index/           # 逻辑索引: 语义摘要读取
 │   └── ...                         # 其他工程化技能 (TDD, Debugging, FileOps 等)
 └── hooks/                          # 自动化钩子系统
     ├── doc_manager/                # 文档管理

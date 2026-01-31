@@ -30,6 +30,20 @@ def inject_all(cwd):
     """Injects all registered references into CLAUDE.md."""
     claude_md_path = os.path.join(cwd, CLAUDE_MD)
 
+    # Policy Check for Logic Index
+    # ALWAYS (Default): Inject logic_tree
+    # ASK/NEVER: Do not inject logic_tree (unless explicitly forced by environment, currently logic handled by caller)
+    # The caller (SKILL) can force injection by setting LOGIC_INDEX_AUTO_INJECT=ALWAYS
+    logic_policy = os.environ.get("LOGIC_INDEX_AUTO_INJECT", "ALWAYS")
+
+    # Create local registry copy to modify
+    active_registry = REGISTRY.copy()
+
+    if logic_policy != "ALWAYS":
+        if "logic_tree" in active_registry:
+            del active_registry["logic_tree"]
+            # print(f"[Injector] Skipping logic_tree injection (Policy: {logic_policy})")
+
     # Create CLAUDE.md if not exists
     if not os.path.exists(claude_md_path):
         with open(claude_md_path, 'w', encoding='utf-8') as f:
@@ -41,7 +55,7 @@ def inject_all(cwd):
     new_content = content
     changes_made = False
 
-    for tag, rel_path in REGISTRY.items():
+    for tag, rel_path in active_registry.items():
         ref_line = f"@{rel_path}"
 
         # Check if already referenced (either by tag or direct link)
@@ -49,7 +63,9 @@ def inject_all(cwd):
             continue
 
         # Build block
-        block = f"\n<{tag}>\n\n{ref_line}\n\n</{tag}>\n"
+        # Ensure sufficient padding before the block
+        prefix = "\n\n" if not new_content.endswith("\n\n") else ("\n" if not new_content.endswith("\n\n") else "")
+        block = f"{prefix}<{tag}>\n\n{ref_line}\n\n</{tag}>\n"
 
         # Check if tag exists but content is different (simple append for now to be safe)
         if f"<{tag}>" not in new_content:

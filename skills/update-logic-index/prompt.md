@@ -12,13 +12,14 @@ Constraints:
 2. Each object must have "name" (symbol name) and "summary" (string).
 3. Summary Rules:
    - One sentence only.
-   - Max 30 characters.
+   - Max 50 characters.
    - No function name repetition.
    - Focus on responsibility/intent.
    - If it's a test function, start with [Test].
    - If it's a utility, start with [Util].
    - If a function acts as a Data Source, use [Source] prefix.
    - If a function acts as a Data Sink, use [Sink] prefix.
+   - If information is primarily from docstring, use [Doc] prefix.
 4. Only summarize symbols listed in "Target Symbols".
 5. Leverage the provided "Dependencies" to understand the cross-file logic and data flow.
 

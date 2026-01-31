@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 import sys
+import subprocess
 import time
 import random
 import concurrent.futures
@@ -28,16 +29,23 @@ from pathlib import Path
 from datetime import datetime
 
 # --- Configuration ---
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 CACHE_FILE = os.path.join(".claude", "logic_index.json")
 CONFIG_FILE = os.path.join(".claude", "logic_index_config")
 OUTPUT_MD = os.path.join(".claude", "logic_tree.md")
+
+# API Defaults
 DEFAULT_MODEL = "gemini-3-flash-preview"
 DEFAULT_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 DEFAULT_MAX_WORKERS = 5
 DEFAULT_RETRY_LIMIT = 3
 DEFAULT_TIMEOUT = 60
+DEFAULT_MAX_OUTPUT_TOKENS = 8192 # Increased to prevent JSON truncation in large files
 MAX_CTX_CHARS = 200000
+
+# Feature Flags
+DEFAULT_AUTO_INJECT = "ALWAYS" # Options: ALWAYS, ASK, NEVER
+DEFAULT_FILTER_SMALL = False   # If True, skip LLM for < 3 lines
 
 class ImportVisitor(ast.NodeVisitor):
     """AST visitor to collect internal imports."""
@@ -108,29 +116,52 @@ class FatalError(Exception):
 class LogicIndexer:
     def __init__(self, root_dir):
         self.root_dir = os.path.abspath(root_dir)
+
         self.api_key = os.environ.get("GEMINI_API_KEY")
         self.model = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
-        self.base_url = os.environ.get("GEMINI_BASE_URL", "") # Optional override
-        self.circuit_open = False # Flag to stop all processing on fatal error
+        self.base_url = os.environ.get("GEMINI_BASE_URL", "")
+        self.circuit_open = False
 
-        # Configure Concurrency
+        # Concurrency & Performance
         try:
             self.max_workers = int(os.environ.get("GEMINI_MAX_WORKERS", DEFAULT_MAX_WORKERS))
         except ValueError:
             self.max_workers = DEFAULT_MAX_WORKERS
 
-        # Configure Resilience
+        try:
+            self.max_output_tokens = int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", DEFAULT_MAX_OUTPUT_TOKENS))
+        except ValueError:
+            self.max_output_tokens = DEFAULT_MAX_OUTPUT_TOKENS
+
+        # Resilience
         try:
             self.retry_limit = int(os.environ.get("GEMINI_RETRY_LIMIT", DEFAULT_RETRY_LIMIT))
-            self.timeout = int(os.environ.get("GEMINI_TIMEOUT", DEFAULT_TIMEOUT))
         except ValueError:
             self.retry_limit = DEFAULT_RETRY_LIMIT
+
+        try:
+            self.timeout = int(os.environ.get("GEMINI_TIMEOUT", DEFAULT_TIMEOUT))
+        except ValueError:
             self.timeout = DEFAULT_TIMEOUT
+
+        # Features
+        # self.auto_inject is removed. Injection logic is now handled by the orchestration layer (SKILL.md)
+        self.filter_small = str(os.environ.get("LOGIC_INDEX_FILTER_SMALL", DEFAULT_FILTER_SMALL)).lower() == "true"
 
         self.exclusions = []
         self._load_config()
         self.cache = self._load_cache()
         self.dirty_nodes = [] # Nodes that need LLM summary
+
+        # Statistics
+        self.stats = {
+            "start_time": time.time(),
+            "total_files": 0,
+            "processed_files": 0,
+            "api_calls": 0,
+            "failed_files": 0,
+            "token_usage_estimate": 0
+        }
 
         # Configure SSL Context (Fix for Windows missing certs)
         self.ssl_context = ssl.create_default_context()
@@ -253,7 +284,7 @@ class LogicIndexer:
             }],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 1000,
+                "maxOutputTokens": self.max_output_tokens,
                 "responseMimeType": "application/json",
                 "responseJsonSchema": {
                     "type": "array",
@@ -275,6 +306,7 @@ class LogicIndexer:
                 "thinkingLevel": thinking_level
             }
 
+        self.stats["api_calls"] += 1
         retries = 0
         while retries <= self.retry_limit:
             try:
@@ -433,7 +465,7 @@ class LogicIndexer:
                     summary = "[Doc] " + " ".join(lines[:3])
 
             # 2. Check line count (if no docstring)
-            elif len(segment.splitlines()) < 3:
+            elif self.filter_small and len(segment.splitlines()) < 3:
                 summary = "Small utility function."
 
         symbol_data = {
@@ -566,6 +598,7 @@ class LogicIndexer:
                         break
                     try:
                         future.result()
+                        print(".", end="", flush=True) # Progress indicator
                     except FatalError as e:
                         print(f"\n{e}")
                         self.circuit_open = True
@@ -580,10 +613,22 @@ class LogicIndexer:
 
     def generate_markdown(self):
         """Generates the final tree view."""
+        # Get Git Hash
+        git_hash = "Unknown"
+        try:
+            git_hash = subprocess.check_output(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=self.root_dir,
+                stderr=subprocess.DEVNULL
+            ).decode('utf-8').strip()
+        except Exception:
+            pass
+
         lines = ["# 🧠 逻辑索引 (Logic Index)"]
-        lines.append(f"> Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        lines.append(f"> Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append(f"> Git Commit: {git_hash}\n")
         lines.append("> **Symbol Types**: `[C]` Class | `[f]` Function")
-        lines.append("> **Tags**: `[Doc]` From Docstring | `[Source]` Data Source | `[Sink]` Data Sink\n")
+        lines.append("> **Tags**: `[Doc]` From Docstring | `[Source]` Data Source | `[Sink]` Data Sink | `[Util]` Utility | `[Test]` Test\n")
 
         # Sort by path
         sorted_files = sorted(self.cache.keys())
@@ -602,23 +647,6 @@ class LogicIndexer:
 
         return "\n".join(lines)
 
-    def trigger_injector(self):
-        """Triggers the injector to update CLAUDE.md"""
-        try:
-            # Resolve injector path relative to this script's location
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            # skills/update-logic-index/run.py -> ../../hooks/doc_manager/injector.py
-            injector_path = os.path.abspath(os.path.join(script_dir, "..", "..", "hooks", "doc_manager", "injector.py"))
-
-            if os.path.exists(injector_path):
-                import subprocess
-                print(f"Triggering CLAUDE.md injection via {os.path.relpath(injector_path, self.root_dir)}...")
-                subprocess.run([sys.executable, injector_path], cwd=self.root_dir, check=False)
-            else:
-                print(f"Warning: Injector not found at {injector_path}")
-        except Exception as e:
-            print(f"Error triggering injector: {e}")
-
     def run(self):
         print("Scanning codebase...")
 
@@ -631,11 +659,15 @@ class LogicIndexer:
                 dirs[:] = [d for d in dirs if not self._is_excluded(os.path.join(root, d))]
 
                 for file in files:
+                    self.stats["total_files"] += 1
                     full_path = os.path.join(root, file)
                     if file.endswith(".py") and not self._is_excluded(full_path):
+                        self.stats["processed_files"] += 1
                         result = self.parse_file(full_path)
                         if result:
                             new_cache[result["path"]] = result
+                        else:
+                            self.stats["failed_files"] += 1
 
             # Update cache structure but keep existing summaries until LLM fills new ones
             self.cache = new_cache
@@ -662,11 +694,15 @@ class LogicIndexer:
 
             print(f"Logic index updated at {OUTPUT_MD}")
 
-            # Trigger Injector (Only if not in a broken state)
-            if not self.circuit_open:
-                self.trigger_injector()
-            else:
-                print("Skipping CLAUDE.md injection due to API errors.")
+            # Final Stats
+            duration = time.time() - self.stats["start_time"]
+            print("\n=== Logic Indexer Stats ===")
+            print(f"Total Files Scanned : {self.stats['total_files']}")
+            print(f"Files Processed     : {self.stats['processed_files']}")
+            print(f"Failed Files        : {self.stats['failed_files']}")
+            print(f"API Calls           : {self.stats['api_calls']}")
+            print(f"Total Duration      : {duration:.2f}s")
+            print("===========================\n")
 
 if __name__ == "__main__":
     # Ensure UTF-8
