@@ -16,7 +16,7 @@ You MUST execute the following steps strictly in order.
 ### Step 1: Check Configuration
 1.  Check if `.claude/logic_index_config` exists.
 2.  **If missing**:
-    - Create it from `skills/update-logic-index/default_logic_config.template`.
+    - Create it from `~/.claude/skills/update-logic-index/default_logic_config.template`.
     - Use `AskUserQuestion` to prompt: "Configuration generated. Please review `.claude/logic_index_config` to exclude unnecessary directories (to save Tokens). Continue?"
     - Wait for "Yes".
 3.  **If exists**:
@@ -29,7 +29,7 @@ You MUST execute the following steps strictly in order.
     - If **MISSING**: Output (in `Simplified Chinese/简体中文`): "检测到首次运行。即将执行全量代码库扫描，请耐心等待..."
 2.  Execute the Python indexer:
     ```bash
-    python skills/update-logic-index/run.py
+    python "~/.claude/skills/update-logic-index/run.py"
     ```
 3.  Wait for completion.
 
@@ -42,7 +42,7 @@ You MUST execute the following steps strictly in order.
     - **Case A: Policy == ALWAYS**
         - Execute Injection immediately:
           ```bash
-          LOGIC_INDEX_AUTO_INJECT=ALWAYS python hooks/doc_manager/injector.py
+          LOGIC_INDEX_AUTO_INJECT=ALWAYS python "~/.claude/hooks/doc_manager/injector.py"
           ```
 
     - **Case B: Policy == ASK**
@@ -50,7 +50,7 @@ You MUST execute the following steps strictly in order.
         - Options: ["Yes (Inject)", "No (Skip)"]
         - **If Yes**:
           ```bash
-          LOGIC_INDEX_AUTO_INJECT=ALWAYS python hooks/doc_manager/injector.py
+          LOGIC_INDEX_AUTO_INJECT=ALWAYS python "~/.claude/hooks/doc_manager/injector.py"
           ```
         - **If No**:
           - Output: "Skipping injection."

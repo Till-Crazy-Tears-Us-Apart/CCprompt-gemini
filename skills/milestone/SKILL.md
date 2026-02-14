@@ -29,7 +29,7 @@ Before generating any files, you MUST perform a deep audit of the work done.
     *   **Constraint**: Do NOT proceed until you can explain the "Ripple Effects" and "Systemic Impact" for every change.
 
 ### Phase 2: Documentation Generation
-1.  **Generate Draft**: Use `python skills/milestone/generate_draft.py` to create a draft file and update the timeline.
+1.  **Generate Draft**: Use `python "~/.claude/skills/milestone/generate_draft.py"` to create a draft file and update the timeline.
 2.  **Fill Content**: Immediately read the generated draft and populate it using the `Write` tool.
     *   **Data Source**: Use the knowledge gathered in Phase 1.
     *   **Language Mandate**: All content MUST be in **Simplified Chinese (简体中文)**.
@@ -38,7 +38,7 @@ Before generating any files, you MUST perform a deep audit of the work done.
 ### Phase 3: Finalization (Summary Sync)
 After the report is written and verified, you MUST synchronize the summary back to the timeline index.
 
-1.  **Sync**: Run `python skills/milestone/sync_timeline.py`.
+1.  **Sync**: Run `python "~/.claude/skills/milestone/sync_timeline.py"`.
 2.  **Verify**: Check that `.claude/history/timeline.md` now contains the meaningful Chinese summary from your report.
 
 ## Content Standards (Strict)
@@ -55,7 +55,7 @@ A milestone consists of two parts:
 2.  **Report**: A detailed markdown file in `.claude/history/reports/YYYYMMDD_HHMMSS.md`.
 
 ## Report Schema (Strict Compliance)
-You must follow the schema defined in `skills/milestone/report_schema.json`.
+You must follow the schema defined in `~/.claude/skills/milestone/report_schema.json`.
 The generator script handles the skeleton; your job is to populate the content in **Chinese**.
 
 ## Discovery

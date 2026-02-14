@@ -23,7 +23,7 @@ Milestone 用于在技术开发周期中创建标准化的阶段性报告，并�
 - **3. 实现细节**: 描述代码变更对数据流和系统状态的影响。
 
 ### 3. 同步摘要
-报告编写完成后，再次运行 `/milestone` (或手动执行 `python skills/milestone/sync_timeline.py`)。系统将：
+报告编写完成后，再次运行 `/milestone` (或手动执行 `python "~/.claude/skills/milestone/sync_timeline.py"`)。系统将：
 - 读取报告文件的 `## 1. 工作摘要` 章节。
 - 将内容回填至 `timeline.md` 的表格中，确保索引与详情一致。
 
